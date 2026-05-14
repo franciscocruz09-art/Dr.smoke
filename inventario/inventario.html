@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Doctor Smoke — Inventario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #09090e;
+  --bg1:       #0f0f16;
+  --bg2:       #141420;
+  --surface:   #181826;
+  --surface2:  #1e1e2e;
+  --border:    rgba(255,255,255,.07);
+  --gold:      #C9A84C;
+  --gold-hi:   #E2C76A;
+  --gold-dim:  rgba(201,168,76,.15);
+  --gold-glow: rgba(201,168,76,.08);
+  --text:      #F0EFE9;
+  --text2:     #9e9ea8;
+  --text3:     #55556a;
+  --ok-bg:     rgba(52,199,89,.12);
+  --ok-fg:     #52d668;
+  --bajo-bg:   rgba(255,196,0,.12);
+  --bajo-fg:   #f5c518;
+  --agot-bg:   rgba(255,69,58,.12);
+  --agot-fg:   #ff6b6b;
+  --blue:      #6db3f2;
+  --purple:    #a78bfa;
+  --r:         10px;
+  --r-sm:      6px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 0 60px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,168,76,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(201,168,76,.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Header ── */
+.page-header {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 16px;
+  padding: 28px 32px 0; flex-wrap: wrap;
+}
+.header-logo {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,.4); object-fit: cover;
+}
+.header-titles { flex: 1; min-width: 200px; }
+.header-eyebrow {
+  font-size: .72rem; font-weight: 500; letter-spacing: .18em;
+  color: var(--gold); text-transform: uppercase; margin-bottom: 2px;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; font-weight: 300; line-height: 1.1;
+}
+.header-title em { font-style: italic; color: var(--gold-hi); }
+.header-sub { font-size: .82rem; color: var(--text3); margin-top: 3px; }
+.header-date {
+  font-size: .75rem; color: var(--text3);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 12px; white-space: nowrap;
+}
+.gold-rule {
+  display: block; height: 1px; margin: 20px 32px 0;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold-hi) 50%, var(--gold) 70%, transparent);
+  opacity: .35; position: relative; z-index: 1;
+}
+
+/* ── Summary cards ── */
+.summary {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 12px; padding: 20px 32px;
+}
+.scard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px;
+  transition: border-color .2s, transform .15s;
+}
+.scard:hover { border-color: rgba(201,168,76,.3); transform: translateY(-1px); }
+.scard-label {
+  font-size: .68rem; font-weight: 500; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 6px;
+}
+.scard-value {
+  font-size: 1.55rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sv-gold   { color: var(--gold-hi); }
+.sv-blue   { color: var(--blue); }
+.sv-green  { color: var(--ok-fg); }
+.sv-yellow { color: var(--bajo-fg); }
+.sv-red    { color: var(--agot-fg); }
+.sv-purple { color: var(--purple); }
+.scard-sub { font-size: .72rem; color: var(--text3); margin-top: 3px; }
+
+/* ── Charts section ── */
+.charts-section {
+  position: relative; z-index: 1;
+  padding: 0 32px 20px;
+}
+.charts-title {
+  font-size: .72rem; font-weight: 500; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+}
+
+/* Row 1: three equal donuts */
+.charts-row1 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+/* Row 2: two full-width bars */
+.charts-row2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.chart-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 18px 18px 14px;
+  transition: border-color .2s;
+  display: flex; flex-direction: column;
+}
+.chart-card:hover { border-color: rgba(201,168,76,.25); }
+.chart-card-title {
+  font-size: .7rem; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+  flex-shrink: 0;
+}
+/* Donut wrapper — fixed square so chart renders correctly */
+.chart-donut-wrap {
+  position: relative;
+  width: 100%;
+  /* keep aspect ratio 1:1 for donuts */
+  aspect-ratio: 1 / 1;
+  max-height: 280px;
+}
+.chart-donut-wrap canvas {
+  position: absolute; inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+/* Bar wrapper — tall enough for 20 horizontal bars */
+.chart-bar-wrap {
+  position: relative;
+  width: 100%;
+  height: 460px;
+}
+.chart-bar-wrap canvas {
+  position: absolute; inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 1000px) {
+  .charts-row1 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .charts-row1 { grid-template-columns: 1fr; }
+  .chart-bar-wrap { height: 360px; }
+}
+
+/* ── Controls ── */
+.controls {
+  position: relative; z-index: 1;
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  padding: 0 32px 16px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: var(--r-sm); border: none;
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 500;
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.btn-gold  { background: linear-gradient(135deg, #C9A84C, #E2C76A); color: #0a0a10; }
+.btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-ghost { background: var(--surface); color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: rgba(201,168,76,.35); color: var(--gold-hi); }
+.btn-save-inv {
+  display:inline-flex; align-items:center; gap:6px;
+  background:transparent; color:var(--gold); border:1px solid rgba(201,168,76,.3);
+  padding:7px 14px; border-radius:var(--r-sm); font-family:'Outfit',sans-serif;
+  font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase;
+  cursor:pointer; transition:all .18s; white-space:nowrap; flex-shrink:0;
+}
+.btn-save-inv:hover { background:var(--gold-dim); border-color:var(--gold); box-shadow:0 0 14px rgba(201,168,76,.12); }
+.btn-save-inv.saving { opacity:.6; pointer-events:none; }
+
+.search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 280px; }
+.search-ico  { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+.search-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 8px 10px 8px 32px;
+  border-radius: var(--r-sm); font-family: 'Outfit', sans-serif; font-size: .83rem;
+  transition: border-color .18s;
+}
+.search-input:focus { outline: none; border-color: rgba(201,168,76,.5); }
+.search-input::placeholder { color: var(--text3); }
+.select-filter {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text2); padding: 8px 12px;
+  border-radius: var(--r-sm); font-family: 'Outfit', sans-serif; font-size: .83rem;
+  cursor: pointer; transition: border-color .18s;
+}
+.select-filter:focus { outline: none; border-color: rgba(201,168,76,.5); }
+.select-filter option { background: var(--surface2); }
+
+/* ── Table ── */
+.table-wrap {
+  position: relative; z-index: 1;
+  margin: 0 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.table-scroll { overflow-x: auto; }
+.table-scroll::-webkit-scrollbar { height: 5px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--bg2); }
+.table-scroll::-webkit-scrollbar-thumb { background: rgba(201,168,76,.25); border-radius: 3px; }
+
+table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+
+thead th {
+  background: var(--surface2); color: var(--gold);
+  padding: 11px 12px; text-align: left;
+  font-size: .7rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+  border-bottom: 1px solid rgba(201,168,76,.2);
+  white-space: nowrap; user-select: none; cursor: pointer;
+}
+thead th:hover { color: var(--gold-hi); }
+thead th.sort-asc::after  { content: ' ↑'; }
+thead th.sort-desc::after { content: ' ↓'; }
+thead th.no-sort { cursor: default; }
+
+tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--gold-glow); }
+tbody td { padding: 9px 12px; vertical-align: middle; }
+
+.cell-inp {
+  background: transparent; border: 1px solid transparent;
+  color: var(--text); padding: 4px 6px; border-radius: 4px;
+  font-family: 'Outfit', sans-serif; font-size: .84rem; width: 100%;
+  transition: border-color .15s, background .15s;
+}
+.cell-inp:focus { outline: none; border-color: rgba(201,168,76,.5); background: rgba(201,168,76,.06); }
+.cell-inp.num { text-align: right; }
+.cell-select {
+  background: transparent; border: 1px solid transparent;
+  color: var(--text2); padding: 4px 6px; border-radius: 4px;
+  font-family: 'Outfit', sans-serif; font-size: .84rem; width: 100%;
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.cell-select:focus { outline: none; border-color: rgba(201,168,76,.5); background: rgba(201,168,76,.06); }
+.cell-select option { background: var(--surface2); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px 3px 8px; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.badge.OK      { background: var(--ok-bg);   color: var(--ok-fg); }
+.badge.OK      .badge-dot { background: var(--ok-fg); }
+.badge.BAJO    { background: var(--bajo-bg); color: var(--bajo-fg); }
+.badge.BAJO    .badge-dot { background: var(--bajo-fg); }
+.badge.AGOTADO { background: var(--agot-bg); color: var(--agot-fg); }
+.badge.AGOTADO .badge-dot { background: var(--agot-fg); }
+
+.right { text-align: right; }
+.td-valor { color: var(--blue); font-weight: 600; font-variant-numeric: tabular-nums; }
+.td-id    { color: var(--text3); font-size: .76rem; }
+.td-brand { font-weight: 500; }
+
+.stock-wrap { display: flex; flex-direction: column; gap: 5px; min-width: 108px; }
+.stock-bar  { height: 3px; border-radius: 3px; background: var(--bg2); overflow: hidden; }
+.stock-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+
+/* ── Stock stepper ── */
+.stepper {
+  display: inline-flex; align-items: center; gap: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+  transition: border-color .15s;
+}
+.stepper:focus-within { border-color: rgba(201,168,76,.5); }
+.stepper-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text2); width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 300; line-height: 1;
+  transition: background .15s, color .15s;
+  flex-shrink: 0; user-select: none;
+}
+.stepper-btn:hover  { background: var(--gold-dim); color: var(--gold-hi); }
+.stepper-btn:active { background: rgba(201,168,76,.25); }
+.stepper-btn.minus:hover { background: var(--agot-bg); color: var(--agot-fg); }
+.stepper-inp {
+  width: 42px; background: transparent; border: none;
+  color: var(--text); font-family: 'Outfit', sans-serif;
+  font-size: .88rem; font-weight: 600;
+  text-align: center; padding: 0;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.stepper-inp:focus { outline: none; }
+.stepper-inp::-webkit-inner-spin-button,
+.stepper-inp::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.btn-del {
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  padding: 5px 8px; border-radius: 4px; font-size: .85rem; transition: all .15s;
+}
+.btn-del:hover { background: var(--agot-bg); color: var(--agot-fg); }
+
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty-state p { font-size: .9rem; margin-top: 10px; }
+
+/* ── Margen pill in table ── */
+.mg-pill {
+  font-size: .74rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  padding: 2px 8px; border-radius: 20px;
+}
+
+@media (max-width: 900px) {
+  .page-header, .controls, .charts-section { padding-left: 16px; padding-right: 16px; }
+  .summary { padding: 16px; }
+  .table-wrap { margin: 0 16px; }
+}
+@media (max-width: 600px) {
+  .header-title { font-size: 1.5rem; }
+  .summary { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="page-header">
+  <img class="header-logo" src="../assets/images/logos/WhatsApp Image 2026-03-27 at 8.50.51 PM.jpeg"
+       alt="Doctor Smoke" onerror="this.style.display='none'"/>
+  <div class="header-titles">
+    <p class="header-eyebrow">Doctor Smoke · Panel</p>
+    <h1 class="header-title">Inventario <em>& Stock</em></h1>
+    <p class="header-sub">Gestión de productos — alertas automáticas según stock mínimo configurado</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button class="btn-save-inv" onclick="guardarManual()" title="Guardar inventario">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Guardar
+    </button>
+    <span id="autoguardado-inv" style="font-size:.7rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);opacity:.4;transition:opacity .3s;display:flex;align-items:center;gap:6px">
+      <span id="save-dot-inv" style="width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:0;transition:opacity .3s;flex-shrink:0"></span>
+      Autoguardado activo
+    </span>
+    <div class="header-date" id="hdrDate"></div>
+  </div>
+</header>
+<span class="gold-rule"></span>
+
+<!-- ── Summary cards ── -->
+<div class="summary">
+  <div class="scard">
+    <div class="scard-label">Productos</div>
+    <div class="scard-value sv-gold" id="sNumProd">0</div>
+    <div class="scard-sub">en catálogo</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Valor Stock</div>
+    <div class="scard-value sv-blue" id="sValor">$0</div>
+    <div class="scard-sub">costo total</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Valor Venta</div>
+    <div class="scard-value sv-purple" id="sVenta">$0</div>
+    <div class="scard-sub">si se vende todo</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Stock OK</div>
+    <div class="scard-value sv-green" id="sOK">0</div>
+    <div class="scard-sub">productos</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Stock Bajo</div>
+    <div class="scard-value sv-yellow" id="sBajo">0</div>
+    <div class="scard-sub">requieren reorden</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Agotados</div>
+    <div class="scard-value sv-red" id="sAgot">0</div>
+    <div class="scard-sub">sin stock</div>
+  </div>
+  <div class="scard" style="border-color:rgba(201,168,76,.2)">
+    <div class="scard-label">Total Vapes</div>
+    <div class="scard-value sv-gold" id="sTotalUnidades">0</div>
+    <div class="scard-sub">unidades en stock</div>
+  </div>
+</div>
+
+<!-- ── Charts ── -->
+<div class="charts-section">
+  <p class="charts-title">Análisis visual de inventario</p>
+
+  <!-- Row 1: donuts -->
+  <div class="charts-row1">
+    <div class="chart-card">
+      <div class="chart-card-title">Estado del stock</div>
+      <div class="chart-donut-wrap"><canvas id="chartEstado"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Unidades por marca</div>
+      <div class="chart-donut-wrap"><canvas id="chartMarca"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Valor stock por marca</div>
+      <div class="chart-donut-wrap"><canvas id="chartValorMarca"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 2: bars -->
+  <div class="charts-row2">
+    <div class="chart-card">
+      <div class="chart-card-title">Stock por producto (top 20 — coloreado por estado)</div>
+      <div class="chart-bar-wrap"><canvas id="chartStock"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Ganancia unitaria por producto (precio venta − costo)</div>
+      <div class="chart-bar-wrap"><canvas id="chartMargen"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Controls ── -->
+<div class="controls">
+  <button class="btn btn-gold" onclick="agregarFila()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
+    </svg>
+    Agregar producto
+  </button>
+  <button class="btn btn-ghost" onclick="exportarExcel()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M2 10v2h10v-2M7 2v7M4 6l3 3 3-3"/>
+    </svg>
+    Exportar Excel
+  </button>
+  <div class="search-wrap">
+    <span class="search-ico">⌕</span>
+    <input class="search-input" type="text" id="buscar" placeholder="Buscar producto…" oninput="filtrar()"/>
+  </div>
+  <select class="select-filter" id="filtroEstado" onchange="filtrar()">
+    <option value="">Todos los estados</option>
+    <option value="OK">OK</option>
+    <option value="BAJO">Stock Bajo</option>
+    <option value="AGOTADO">Agotado</option>
+  </select>
+  <select class="select-filter" id="filtroCat" onchange="filtrar()">
+    <option value="">Todas las marcas</option>
+    <option value="Waka">Waka</option>
+    <option value="Nexa">Nexa</option>
+    <option value="Lost Mary">Lost Mary</option>
+    <option value="Lost Vape">Lost Vape</option>
+    <option value="Bugatti">Bugatti</option>
+    <option value="Muha Meds">Muha Meds</option>
+    <option value="Otro">Otro</option>
+  </select>
+</div>
+
+<!-- ── Table ── -->
+<div class="table-wrap">
+  <div class="table-scroll">
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th class="no-sort" style="width:52px">ID</th>
+          <th data-col="nombre">Producto</th>
+          <th data-col="cat">Marca</th>
+          <th data-col="prov">Proveedor</th>
+          <th data-col="puffs" class="right">Puffs</th>
+          <th data-col="costo" class="right">Costo</th>
+          <th data-col="precio" class="right">P. Venta</th>
+          <th data-col="margen" class="right">Margen</th>
+          <th data-col="stock" class="right">Stock</th>
+          <th data-col="min" class="right">Mín.</th>
+          <th data-col="fecha">Última entrada</th>
+          <th class="right no-sort">Valor</th>
+          <th data-col="estado">Estado</th>
+          <th class="no-sort" style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <p>No hay productos que coincidan con la búsqueda.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Date
+(function(){
+  const d = new Date();
+  document.getElementById('hdrDate').textContent =
+    d.toLocaleDateString('es-MX', {weekday:'long',year:'numeric',month:'long',day:'numeric'})
+     .replace(/^\w/, c => c.toUpperCase());
+})();
+
+// ── Palette brand colors
+const BRAND_COLORS = {
+  "Waka":      "#6db3f2",
+  "Nexa":      "#C9A84C",
+  "Lost Mary": "#ff6b6b",
+  "Lost Vape": "#ff9a9a",
+  "Bugatti":   "#52d668",
+  "Muha Meds": "#E2C76A",
+  "Otro":      "#66667a",
+};
+
+const cats = ["Waka","Nexa","Lost Mary","Lost Vape","Bugatti","Muha Meds","Otro"];
+
+// ── Full product catalog
+let datos = [
+  // ── Muha Meds
+  {id:"001", nombre:"Muha Meds — Venom OG",           cat:"Muha Meds", prov:"Importado",      puffs:0,     costo:485, precio:700, stock:3,  min:2,  fecha:"2026-04-10"},
+  {id:"002", nombre:"Muha Meds — Mango Peach Ring",   cat:"Muha Meds", prov:"Importado",      puffs:0,     costo:485, precio:700, stock:3,  min:2,  fecha:"2026-04-10"},
+  {id:"003", nombre:"Muha Meds — Rainbow Belts",      cat:"Muha Meds", prov:"Importado",      puffs:0,     costo:485, precio:700, stock:2,  min:2,  fecha:"2026-04-10"},
+  // ── Lost Vape Orion Bar 7500
+  {id:"004", nombre:"Lost Vape Orion Bar 7500 — Strawberry Kiwi",       cat:"Lost Vape", prov:"Elfbar MX", puffs:7500,  costo:70,  precio:120, stock:18, min:8,  fecha:"2026-04-17"},
+  {id:"005", nombre:"Lost Vape Orion Bar 7500 — Sour Apple Ice",         cat:"Lost Vape", prov:"Elfbar MX", puffs:7500,  costo:70,  precio:120, stock:14, min:8,  fecha:"2026-04-17"},
+  {id:"006", nombre:"Lost Vape Orion Bar 7500 — Ice Cap",                cat:"Lost Vape", prov:"Elfbar MX", puffs:7500,  costo:70,  precio:120, stock:10, min:8,  fecha:"2026-04-17"},
+  {id:"007", nombre:"Lost Vape Orion Bar 7500 — Peach Mango Watermelon", cat:"Lost Vape", prov:"Elfbar MX", puffs:7500,  costo:70,  precio:120, stock:12, min:8,  fecha:"2026-04-17"},
+  {id:"041", nombre:"Lost Vape Orion Bar 7500 — Summer Berry Ice (Ltd.)", cat:"Lost Vape", prov:"Elfbar MX", puffs:7500,  costo:70,  precio:120, stock:0,  min:4,  fecha:"2026-04-24"},
+  // ── Lost Mary OS5000
+  {id:"008", nombre:"Lost Mary OS5000 — Berry Cherry",  cat:"Lost Mary", prov:"Elfbar MX", puffs:5000,  costo:70,  precio:120, stock:15, min:8,  fecha:"2026-04-17"},
+  // ── Bugatti
+  {id:"009", nombre:"Bugatti Spaceship 7K — Frozen Pineapple",  cat:"Bugatti", prov:"Aroma King MX", puffs:7000, costo:120, precio:200, stock:8,  min:4,  fecha:"2026-04-19"},
+  {id:"010", nombre:"Bugatti Spaceship 700S — Tropical Mango",  cat:"Bugatti", prov:"Aroma King MX", puffs:7000, costo:120, precio:200, stock:7,  min:4,  fecha:"2026-04-19"},
+  {id:"011", nombre:"Bugatti 7k — Wiki Dragón Berry",           cat:"Bugatti", prov:"Aroma King MX", puffs:7000, costo:85,  precio:200, stock:6,  min:4,  fecha:"2026-04-19"},
+  // ── Waka GO 10k
+  {id:"012", nombre:"Waka GO 10000 — Mango Lychee",             cat:"Waka", prov:"Dist. Waka MX", puffs:10000, costo:160, precio:280, stock:10, min:5,  fecha:"2026-04-17"},
+  {id:"013", nombre:"Waka GO 10000 — Blueberry Mint",           cat:"Waka", prov:"Dist. Waka MX", puffs:10000, costo:160, precio:280, stock:8,  min:5,  fecha:"2026-04-17"},
+  {id:"014", nombre:"Waka GO 10000 — Mr Peach",                 cat:"Waka", prov:"Dist. Waka MX", puffs:10000, costo:160, precio:280, stock:9,  min:5,  fecha:"2026-04-17"},
+  {id:"015", nombre:"Waka GO 10000 — BlackBerry",               cat:"Waka", prov:"Dist. Waka MX", puffs:10000, costo:160, precio:280, stock:7,  min:5,  fecha:"2026-04-17"},
+  {id:"016", nombre:"Waka GO 10000 — Piña Colada",              cat:"Waka", prov:"Dist. Waka MX", puffs:10000, costo:160, precio:280, stock:12, min:5,  fecha:"2026-04-17"},
+  {id:"017", nombre:"Waka GO 10000 — Peach Blue Raspberry",     cat:"Waka", prov:"Dist. Waka MX", puffs:10000, costo:160, precio:280, stock:6,  min:5,  fecha:"2026-04-17"},
+  // ── Waka SoPro 15k
+  {id:"018", nombre:"Waka SoPro 15K — Cool Mint",               cat:"Waka", prov:"Dist. Waka MX", puffs:15000, costo:185, precio:320, stock:10, min:5,  fecha:"2026-04-17"},
+  {id:"019", nombre:"Waka SoPro 15K — Cherry Berry",            cat:"Waka", prov:"Dist. Waka MX", puffs:15000, costo:185, precio:320, stock:8,  min:5,  fecha:"2026-04-17"},
+  {id:"020", nombre:"Waka SoPro 15K — Piña Colada",             cat:"Waka", prov:"Dist. Waka MX", puffs:15000, costo:185, precio:320, stock:7,  min:5,  fecha:"2026-04-17"},
+  {id:"021", nombre:"Waka SoPro 15K — Watermelon Kiwi",         cat:"Waka", prov:"Dist. Waka MX", puffs:15000, costo:185, precio:320, stock:5,  min:5,  fecha:"2026-04-17"},
+  // ── Waka Pro 30k
+  {id:"022", nombre:"Waka Pro 30K — Blueberry Splash",          cat:"Waka", prov:"Dist. Waka MX", puffs:30000, costo:230, precio:380, stock:6,  min:4,  fecha:"2026-04-17"},
+  {id:"023", nombre:"Waka Pro 30K — Strawberry Kiwi",           cat:"Waka", prov:"Dist. Waka MX", puffs:30000, costo:230, precio:380, stock:5,  min:4,  fecha:"2026-04-17"},
+  {id:"024", nombre:"Waka soPro Titan 30K — Cherry Watermelón", cat:"Waka", prov:"Dist. Waka MX", puffs:30000, costo:230, precio:380, stock:6,  min:4,  fecha:"2026-04-17"},
+  // ── Waka Blade 33k
+  {id:"025", nombre:"Waka Blade 33K — Coco Strawberry",         cat:"Waka", prov:"Dist. Waka MX", puffs:33000, costo:235, precio:380, stock:7,  min:4,  fecha:"2026-04-17"},
+  {id:"026", nombre:"Waka Blade 33K — Passion Fruit",           cat:"Waka", prov:"Dist. Waka MX", puffs:33000, costo:235, precio:380, stock:5,  min:4,  fecha:"2026-04-17"},
+  {id:"027", nombre:"Waka Blade 33K — Blueberry Splash",        cat:"Waka", prov:"Dist. Waka MX", puffs:33000, costo:235, precio:380, stock:4,  min:4,  fecha:"2026-04-17"},
+  // ── Waka Burst 36k
+  {id:"028", nombre:"Waka Burst 36K — Pink Lemonade",           cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:5,  min:4,  fecha:"2026-04-17"},
+  {id:"029", nombre:"Waka Burst 36K — Watermelon Ice",          cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:6,  min:4,  fecha:"2026-04-17"},
+  {id:"030", nombre:"Waka Burst 36K — Kiwi Strawberry",         cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:4,  min:4,  fecha:"2026-04-17"},
+  {id:"031", nombre:"Waka Burst 36K — Strawberry Banana",       cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:3,  min:4,  fecha:"2026-04-17"},
+  {id:"032", nombre:"Waka Burst 36K — Cherry Bomb",             cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:5,  min:4,  fecha:"2026-04-17"},
+  {id:"033", nombre:"Waka Burst 36K — Blueberry Watermelon",    cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:4,  min:4,  fecha:"2026-04-17"},
+  {id:"034", nombre:"Waka Burst 36K — Strawberry Refresher",    cat:"Waka", prov:"Dist. Waka MX", puffs:36000, costo:235, precio:380, stock:3,  min:4,  fecha:"2026-04-17"},
+  // ── Waka Icon 50k
+  {id:"035", nombre:"Waka Icon 50K — Fresh Mint",               cat:"Waka", prov:"Dist. Waka MX", puffs:50000, costo:260, precio:450, stock:5,  min:4,  fecha:"2026-04-17"},
+  {id:"036", nombre:"Waka Icon 50K — Cherry Watermelón",        cat:"Waka", prov:"Dist. Waka MX", puffs:50000, costo:260, precio:450, stock:4,  min:4,  fecha:"2026-04-17"},
+  {id:"037", nombre:"Waka Icon 50K — Peach Mango Watermelón",   cat:"Waka", prov:"Dist. Waka MX", puffs:50000, costo:260, precio:450, stock:5,  min:4,  fecha:"2026-04-17"},
+  {id:"038", nombre:"Waka Icon 50K — Kiwi Dragon Berry",        cat:"Waka", prov:"Dist. Waka MX", puffs:50000, costo:260, precio:450, stock:4,  min:4,  fecha:"2026-04-17"},
+  {id:"039", nombre:"Waka Icon 50K — Watermelon Ice",           cat:"Waka", prov:"Dist. Waka MX", puffs:50000, costo:260, precio:450, stock:3,  min:4,  fecha:"2026-04-17"},
+  // ── Nexa
+  {id:"040", nombre:"Nexa Ultra 40K — Triple Berry",            cat:"Nexa",  prov:"Dist. Nexa MX", puffs:40000, costo:280, precio:450, stock:3,  min:4,  fecha:"2026-04-01"},
+];
+
+let contadorID = datos.length + 1;
+let sortCol = null, sortDir = 1;
+
+const fmt   = n => "$" + Number(n).toLocaleString("es-MX", {minimumFractionDigits:0});
+const estado = (s, m) => s <= 0 ? "AGOTADO" : s < m ? "BAJO" : "OK";
+function stockColor(s, m){ return s<=0?"var(--agot-fg)":s<m?"var(--bajo-fg)":"var(--ok-fg)"; }
+function stockPct(s, m){ return m<=0?100:Math.min(100,Math.round(s/Math.max(s,m*2)*100)); }
+function margenColor(mg){ return mg>=40?"var(--ok-fg)":mg>=25?"var(--bajo-fg)":"var(--agot-fg)"; }
+
+// ── Chart instances
+let chEstado, chMarca, chValorMarca, chStock, chMargen;
+
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      labels: {
+        color: '#9e9ea8',
+        font: { family: 'Outfit', size: 11 },
+        boxWidth: 10, padding: 12,
+        usePointStyle: true, pointStyle: 'circle'
+      }
+    },
+    tooltip: {
+      backgroundColor: '#1e1e2e',
+      titleColor: '#E2C76A',
+      bodyColor: '#F0EFE9',
+      borderColor: 'rgba(201,168,76,.3)',
+      borderWidth: 1,
+      padding: 12,
+      cornerRadius: 8,
+      titleFont: { family: 'Outfit', size: 12, weight: '600' },
+      bodyFont:  { family: 'Outfit', size: 12 },
+    }
+  }
+};
+
+// ── Shared scale config
+const SCALE_X = {
+  ticks: {
+    color: '#66667a',
+    font: { family: 'Outfit', size: 10 },
+    maxRotation: 45, minRotation: 30,
+    maxTicksLimit: 20,
+  },
+  grid: { color: 'rgba(255,255,255,.04)' },
+  border: { color: 'rgba(255,255,255,.08)' }
+};
+const SCALE_Y = {
+  ticks: { color: '#9e9ea8', font: { family: 'Outfit', size: 11 } },
+  grid: { color: 'rgba(255,255,255,.06)' },
+  border: { color: 'rgba(255,255,255,.08)' },
+  beginAtZero: true
+};
+
+// ── Donut shared options
+function donutOpts(extraPlugins) {
+  return {
+    ...CHART_DEFAULTS,
+    cutout: '62%',
+    plugins: {
+      ...CHART_DEFAULTS.plugins,
+      legend: { ...CHART_DEFAULTS.plugins.legend, position: 'bottom', align: 'center' },
+      ...extraPlugins
+    }
+  };
+}
+
+function buildCharts(){
+  const filas = Array.from(document.querySelectorAll("#cuerpo tr"));
+
+  // ── 1. Estado donut
+  let ok=0, bajo=0, agot=0;
+  filas.forEach(tr => {
+    const s = parseInt(tr.querySelector(".inp-stock")?.value)||0;
+    const m = parseInt(tr.querySelector(".inp-min")?.value)||0;
+    const e = estado(s,m);
+    if(e==="OK") ok++; else if(e==="BAJO") bajo++; else agot++;
+  });
+  if(chEstado) chEstado.destroy();
+  chEstado = new Chart(document.getElementById('chartEstado'), {
+    type: 'doughnut',
+    data: {
+      labels: ["OK","Stock Bajo","Agotado"],
+      datasets: [{ data: [ok, bajo, agot],
+        backgroundColor: ["rgba(82,214,104,.75)","rgba(245,197,24,.75)","rgba(255,107,107,.75)"],
+        borderColor:     ["#52d668","#f5c518","#ff6b6b"],
+        borderWidth: 2, hoverOffset: 8
+      }]
+    },
+    options: donutOpts({
+      tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} productos` }
+      }
+    })
+  });
+
+  // ── 2. Unidades por marca donut
+  const marcaStock = {};
+  filas.forEach(tr => {
+    const cat = tr.querySelector(".inp-cat")?.value || "Otro";
+    const s   = parseInt(tr.querySelector(".inp-stock")?.value)||0;
+    marcaStock[cat] = (marcaStock[cat]||0) + s;
+  });
+  const mLabels = Object.keys(marcaStock);
+  const mColors = mLabels.map(k => BRAND_COLORS[k] || "#66667a");
+  if(chMarca) chMarca.destroy();
+  chMarca = new Chart(document.getElementById('chartMarca'), {
+    type: 'doughnut',
+    data: {
+      labels: mLabels,
+      datasets: [{ data: mLabels.map(k => marcaStock[k]),
+        backgroundColor: mColors.map(c => c+'bb'),
+        borderColor: mColors,
+        borderWidth: 2, hoverOffset: 8
+      }]
+    },
+    options: donutOpts({
+      tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} uds` }
+      }
+    })
+  });
+
+  // ── 3. Valor por marca donut
+  const marcaValor = {};
+  filas.forEach(tr => {
+    const cat = tr.querySelector(".inp-cat")?.value || "Otro";
+    const co  = parseFloat(tr.querySelector(".inp-costo")?.value)||0;
+    const s   = parseInt(tr.querySelector(".inp-stock")?.value)||0;
+    marcaValor[cat] = (marcaValor[cat]||0) + co*s;
+  });
+  const vLabels = Object.keys(marcaValor);
+  const vColors = vLabels.map(k => BRAND_COLORS[k] || "#66667a");
+  if(chValorMarca) chValorMarca.destroy();
+  chValorMarca = new Chart(document.getElementById('chartValorMarca'), {
+    type: 'doughnut',
+    data: {
+      labels: vLabels,
+      datasets: [{ data: vLabels.map(k => marcaValor[k]),
+        backgroundColor: vColors.map(c => c+'bb'),
+        borderColor: vColors,
+        borderWidth: 2, hoverOffset: 8
+      }]
+    },
+    options: donutOpts({
+      tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+        callbacks: { label: ctx => ` ${ctx.label}: $${Number(ctx.raw).toLocaleString("es-MX")}` }
+      }
+    })
+  });
+
+  // ── 4. Stock por producto — horizontal bar (más legible con muchos labels)
+  const prods = filas.map(tr => ({
+    nombre: (tr.querySelector(".inp-nombre")?.value || "").replace(/^(Waka|Lost Vape|Lost Mary|Bugatti|Muha Meds|Nexa)\s+/i,""),
+    stock:  parseInt(tr.querySelector(".inp-stock")?.value)||0,
+    min:    parseInt(tr.querySelector(".inp-min")?.value)||0,
+  })).sort((a,b) => b.stock - a.stock).slice(0,20);
+
+  const bColors  = prods.map(p => { const e=estado(p.stock,p.min); return e==="OK"?"rgba(82,214,104,.75)":e==="BAJO"?"rgba(245,197,24,.75)":"rgba(255,107,107,.75)"; });
+  const bBorders = prods.map(p => { const e=estado(p.stock,p.min); return e==="OK"?"#52d668":e==="BAJO"?"#f5c518":"#ff6b6b"; });
+
+  if(chStock) chStock.destroy();
+  chStock = new Chart(document.getElementById('chartStock'), {
+    type: 'bar',
+    data: {
+      labels: prods.map(p => p.nombre.length > 26 ? p.nombre.slice(0,26)+"…" : p.nombre),
+      datasets: [{ label: 'Unidades', data: prods.map(p=>p.stock),
+        backgroundColor: bColors, borderColor: bBorders,
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      indexAxis: 'y',
+      scales: {
+        x: { ...SCALE_Y, ticks: { ...SCALE_Y.ticks, callback: v => v+" uds" } },
+        y: { ticks: { color:'#9e9ea8', font:{family:'Outfit',size:10.5} },
+             grid: { color:'rgba(255,255,255,.03)' },
+             border: { color:'rgba(255,255,255,.08)' } }
+      },
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        legend: { display: false },
+        tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+          callbacks: { label: ctx => ` Stock: ${ctx.raw} unidades` }
+        }
+      }
+    }
+  });
+
+  // ── 5. Ganancia unitaria — horizontal bar
+  const ganProds = filas.map(tr => ({
+    nombre: (tr.querySelector(".inp-nombre")?.value||"").replace(/^(Waka|Lost Vape|Lost Mary|Bugatti|Muha Meds|Nexa)\s+/i,""),
+    gan: (parseFloat(tr.querySelector(".inp-precio")?.value)||0)-(parseFloat(tr.querySelector(".inp-costo")?.value)||0),
+    cat: tr.querySelector(".inp-cat")?.value||"Otro",
+  })).filter(p=>p.gan>0).sort((a,b)=>b.gan-a.gan).slice(0,20);
+
+  if(chMargen) chMargen.destroy();
+  chMargen = new Chart(document.getElementById('chartMargen'), {
+    type: 'bar',
+    data: {
+      labels: ganProds.map(p => p.nombre.length>26 ? p.nombre.slice(0,26)+"…" : p.nombre),
+      datasets: [{ label:'Ganancia unitaria', data: ganProds.map(p=>p.gan),
+        backgroundColor: ganProds.map(p=>(BRAND_COLORS[p.cat]||"#C9A84C")+'99'),
+        borderColor:     ganProds.map(p=> BRAND_COLORS[p.cat]||"#C9A84C"),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      indexAxis: 'y',
+      scales: {
+        x: { ...SCALE_Y, ticks: { ...SCALE_Y.ticks, callback: v => "$"+v } },
+        y: { ticks: { color:'#9e9ea8', font:{family:'Outfit',size:10.5} },
+             grid: { color:'rgba(255,255,255,.03)' },
+             border: { color:'rgba(255,255,255,.08)' } }
+      },
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        legend: { display: false },
+        tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+          callbacks: { label: ctx => ` Ganancia: $${ctx.raw} MXN por pieza` }
+        }
+      }
+    }
+  });
+}
+
+// ── Row creation
+function crearFila(d){
+  const tr = document.createElement("tr");
+  tr.dataset.id = d.id;
+  const catOpts = cats.map(c => `<option ${c===d.cat?"selected":""}>${c}</option>`).join("");
+  const pct = stockPct(d.stock, d.min);
+  const col = stockColor(d.stock, d.min);
+  const gan = d.precio - d.costo;
+  const mgPct = d.precio > 0 ? Math.round((gan/d.precio)*100) : 0;
+  tr.innerHTML = `
+    <td class="td-id">
+      <input type="text" class="cell-inp inp-id" value="${d.id}" style="width:44px;font-size:.75rem">
+    </td>
+    <td class="td-brand">
+      <input type="text" class="cell-inp inp-nombre" value="${d.nombre}" style="min-width:200px">
+    </td>
+    <td>
+      <select class="cell-select inp-cat">${catOpts}</select>
+    </td>
+    <td>
+      <input type="text" class="cell-inp inp-prov" value="${d.prov}" style="min-width:110px">
+    </td>
+    <td class="right">
+      <input type="number" class="cell-inp inp-puffs num" value="${d.puffs}" min="0" style="width:76px">
+    </td>
+    <td class="right">
+      <input type="number" class="cell-inp inp-costo num" value="${d.costo}" min="0" style="width:68px">
+    </td>
+    <td class="right">
+      <input type="number" class="cell-inp inp-precio num" value="${d.precio}" min="0" style="width:68px">
+    </td>
+    <td class="right td-margen">
+      <span class="mg-pill" style="background:${margenColor(mgPct)}22;color:${margenColor(mgPct)}">+$${gan} · ${mgPct}%</span>
+    </td>
+    <td>
+      <div class="stock-wrap">
+        <div class="stepper">
+          <button type="button" class="stepper-btn minus" onclick="stepStock(this,-1)" tabindex="-1">−</button>
+          <input type="number" class="stepper-inp inp-stock" value="${d.stock}" min="0">
+          <button type="button" class="stepper-btn plus"  onclick="stepStock(this,+1)" tabindex="-1">+</button>
+        </div>
+        <div class="stock-bar"><div class="stock-fill td-bar" style="width:${pct}%;background:${col}"></div></div>
+      </div>
+    </td>
+    <td class="right">
+      <input type="number" class="cell-inp inp-min num" value="${d.min}" min="0" style="width:48px">
+    </td>
+    <td>
+      <input type="date" class="cell-inp inp-fecha" value="${d.fecha}" style="width:136px">
+    </td>
+    <td class="td-valor right">—</td>
+    <td class="td-estado"></td>
+    <td>
+      <button class="btn-del" title="Eliminar" onclick="eliminarFila(this)">✕</button>
+    </td>
+  `;
+  tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", () => recalcFila(tr)));
+  return tr;
+}
+
+function recalcFila(tr){
+  const costo  = parseFloat(tr.querySelector(".inp-costo").value)  || 0;
+  const precio = parseFloat(tr.querySelector(".inp-precio").value) || 0;
+  const stock  = parseInt(tr.querySelector(".inp-stock").value)    || 0;
+  const min    = parseInt(tr.querySelector(".inp-min").value)      || 0;
+  const valor  = costo * stock;
+  const est    = estado(stock, min);
+  const pct    = stockPct(stock, min);
+  const col    = stockColor(stock, min);
+  const gan    = precio - costo;
+  const mgPct  = precio > 0 ? Math.round((gan/precio)*100) : 0;
+
+  tr.querySelector(".td-valor").textContent = fmt(valor);
+  tr.querySelector(".td-estado").innerHTML =
+    `<span class="badge ${est}"><span class="badge-dot"></span>${est}</span>`;
+  tr.querySelector(".td-margen").innerHTML =
+    `<span class="mg-pill" style="background:${margenColor(mgPct)}22;color:${margenColor(mgPct)}">+$${gan} · ${mgPct}%</span>`;
+  const bar = tr.querySelector(".td-bar");
+  if(bar){ bar.style.width = pct + "%"; bar.style.background = col; }
+  tr.style.borderLeft = `3px solid ${col}`;
+  const rowBg = est==="AGOTADO" ? "rgba(255,69,58,.18)" : est==="BAJO" ? "rgba(255,196,0,.14)" : "rgba(52,199,89,.11)";
+  tr.style.background = rowBg;
+
+  actualizarResumen();
+  scheduleChartUpdate();
+  autoguardar();
+}
+
+function stepStock(btn, delta){
+  const tr  = btn.closest("tr");
+  const inp = tr.querySelector(".inp-stock");
+  const val = (parseInt(inp.value) || 0) + delta;
+  inp.value = Math.max(0, val);
+  recalcFila(tr);
+}
+
+let chartTimer = null;
+function scheduleChartUpdate(){
+  clearTimeout(chartTimer);
+  chartTimer = setTimeout(buildCharts, 300);
+}
+
+function actualizarResumen(){
+  const filas = Array.from(document.querySelectorAll("#cuerpo tr"))
+    .filter(tr => tr.style.display !== "none");
+  let vt=0, vv=0, ok=0, bajo=0, agot=0, totalUds=0;
+  filas.forEach(tr => {
+    const c = parseFloat(tr.querySelector(".inp-costo")?.value)  || 0;
+    const p = parseFloat(tr.querySelector(".inp-precio")?.value) || 0;
+    const s = parseInt(tr.querySelector(".inp-stock")?.value)    || 0;
+    const m = parseInt(tr.querySelector(".inp-min")?.value)      || 0;
+    vt += c * s; vv += p * s; totalUds += s;
+    const e = estado(s, m);
+    if(e==="OK") ok++; else if(e==="BAJO") bajo++; else agot++;
+  });
+  document.getElementById("sNumProd").textContent     = filas.length;
+  document.getElementById("sValor").textContent       = fmt(vt);
+  document.getElementById("sVenta").textContent       = fmt(vv);
+  document.getElementById("sTotalUnidades").textContent = totalUds.toLocaleString("es-MX");
+  document.getElementById("sOK").textContent          = ok;
+  document.getElementById("sBajo").textContent    = bajo;
+  document.getElementById("sAgot").textContent    = agot;
+  document.getElementById("emptyState").style.display = filas.length === 0 ? "" : "none";
+}
+
+// ── Persistencia localStorage
+function obtenerDatosTabla(){
+  const filas = [];
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    filas.push({
+      id:     tr.querySelector(".inp-id")?.value     || "",
+      nombre: tr.querySelector(".inp-nombre")?.value || "",
+      cat:    tr.querySelector(".inp-cat")?.value    || "Waka",
+      prov:   tr.querySelector(".inp-prov")?.value   || "",
+      puffs:  parseFloat(tr.querySelector(".inp-puffs")?.value)  || 0,
+      costo:  parseFloat(tr.querySelector(".inp-costo")?.value)  || 0,
+      precio: parseFloat(tr.querySelector(".inp-precio")?.value) || 0,
+      stock:  parseInt(tr.querySelector(".inp-stock")?.value)    || 0,
+      min:    parseInt(tr.querySelector(".inp-min")?.value)      || 0,
+      fecha:  tr.querySelector(".inp-fecha")?.value  || "",
+    });
+  });
+  return filas;
+}
+
+let _saveTimer = null;
+function autoguardar(){
+  const datos = obtenerDatosTabla();
+  localStorage.setItem("drsmoke_inventario", JSON.stringify(datos));
+  localStorage.setItem("drsmoke_inventario_id", contadorID);
+  const dot = document.getElementById("save-dot-inv");
+  const ind = document.getElementById("autoguardado-inv");
+  if(dot){ dot.style.opacity = "1"; }
+  if(ind){ ind.style.opacity = "1"; }
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    if(dot) dot.style.opacity = "0";
+    if(ind) ind.style.opacity = "0.4";
+  }, 2000);
+}
+
+function guardarManual(){
+  const btn = document.querySelector(".btn-save-inv");
+  if(btn){ btn.classList.add("saving"); btn.textContent = "✓ Guardado"; }
+  autoguardar();
+  setTimeout(() => {
+    if(btn){
+      btn.classList.remove("saving");
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Guardar`;
+    }
+  }, 1800);
+}
+
+function renderizar(){
+  const tbody = document.getElementById("cuerpo");
+  tbody.innerHTML = "";
+  let datosCargar = datos;
+  const guardado = localStorage.getItem("drsmoke_inventario");
+  if(guardado){
+    try {
+      const parsed = JSON.parse(guardado);
+      if(parsed.length > 0){
+        // Merge: keep saved data but add any new products from datos[] not yet in localStorage
+        const idsGuardados = new Set(parsed.map(d => d.id));
+        const nuevos = datos.filter(d => !idsGuardados.has(d.id));
+        datosCargar = [...parsed, ...nuevos];
+      }
+    } catch(e){}
+  }
+  const idGuardado = localStorage.getItem("drsmoke_inventario_id");
+  if(idGuardado) contadorID = parseInt(idGuardado);
+  datosCargar.forEach(d => {
+    const tr = crearFila(d);
+    tbody.appendChild(tr);
+    recalcFila(tr);
+  });
+  actualizarResumen();
+  buildCharts();
+}
+
+function agregarFila(){
+  const id = String(contadorID++).padStart(3,"0");
+  const nuevo = { id, nombre:"Nuevo Producto", cat:"Waka", prov:"",
+    puffs:0, costo:0, precio:0, stock:0, min:0,
+    fecha: new Date().toISOString().split("T")[0] };
+  const tbody = document.getElementById("cuerpo");
+  const tr = crearFila(nuevo);
+  tbody.appendChild(tr);
+  recalcFila(tr);
+  tr.querySelector(".inp-nombre").focus();
+  tr.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function eliminarFila(btn){
+  btn.closest("tr").remove();
+  actualizarResumen();
+  scheduleChartUpdate();
+}
+
+function filtrar(){
+  const q   = document.getElementById("buscar").value.toLowerCase().trim();
+  const est = document.getElementById("filtroEstado").value;
+  const cat = document.getElementById("filtroCat").value;
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    const n   = tr.querySelector(".inp-nombre")?.value.toLowerCase() || "";
+    const b   = tr.querySelector(".badge")?.textContent.trim() || "";
+    const cv  = tr.querySelector(".inp-cat")?.value || "";
+    tr.style.display = ((!q||n.includes(q)) && (!est||b===est) && (!cat||cv===cat)) ? "" : "none";
+  });
+  actualizarResumen();
+  scheduleChartUpdate();
+}
+
+// ── Sort
+document.querySelectorAll("thead th[data-col]").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    if(sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=1; }
+    document.querySelectorAll("thead th").forEach(h => h.classList.remove("sort-asc","sort-desc"));
+    th.classList.add(sortDir===1?"sort-asc":"sort-desc");
+    const tbody = document.getElementById("cuerpo");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+    filas.sort((a,b) => {
+      const va = getVal(a,col), vb = getVal(b,col);
+      return typeof va==="number"?(va-vb)*sortDir:va.localeCompare(vb,"es")*sortDir;
+    });
+    filas.forEach(tr => tbody.appendChild(tr));
+  });
+});
+
+function getVal(tr, col){
+  const m = {
+    nombre:  () => tr.querySelector(".inp-nombre")?.value  || "",
+    cat:     () => tr.querySelector(".inp-cat")?.value     || "",
+    prov:    () => tr.querySelector(".inp-prov")?.value    || "",
+    puffs:   () => parseFloat(tr.querySelector(".inp-puffs")?.value)  || 0,
+    costo:   () => parseFloat(tr.querySelector(".inp-costo")?.value)  || 0,
+    precio:  () => parseFloat(tr.querySelector(".inp-precio")?.value) || 0,
+    margen:  () => {
+      const p = parseFloat(tr.querySelector(".inp-precio")?.value)||0;
+      const c = parseFloat(tr.querySelector(".inp-costo")?.value)||0;
+      return p>0 ? (p-c)/p*100 : 0;
+    },
+    stock:   () => parseInt(tr.querySelector(".inp-stock")?.value)    || 0,
+    min:     () => parseInt(tr.querySelector(".inp-min")?.value)      || 0,
+    fecha:   () => tr.querySelector(".inp-fecha")?.value   || "",
+    estado:  () => tr.querySelector(".badge")?.textContent.trim()     || "",
+  };
+  return m[col] ? m[col]() : "";
+}
+
+// ── Export CSV
+function exportarExcel(){
+  const wb = XLSX.utils.book_new();
+  const fecha = new Date().toISOString().split("T")[0];
+
+  // ── Hoja 1: Existencias
+  const filas = [];
+  const encabezado = ["#","Producto","Marca","Puffs","Stock","Stock Mín.","Estado","Costo Unit.","Precio Venta","Ganancia Unit.","Margen %","Valor en Stock","Última Entrada"];
+  filas.push(["DOCTOR SMOKE — INVENTARIO DE EXISTENCIAS"]);
+  filas.push([`Generado: ${fecha}`]);
+  filas.push([]);
+  filas.push(encabezado);
+
+  let totalStock=0, totalValor=0, ok=0, bajo=0, agot=0;
+  document.querySelectorAll("#cuerpo tr").forEach((tr, i) => {
+    const n  = tr.querySelector(".inp-nombre").value;
+    const c  = tr.querySelector(".inp-cat").value;
+    const pf = parseFloat(tr.querySelector(".inp-puffs").value)||0;
+    const co = parseFloat(tr.querySelector(".inp-costo").value)||0;
+    const pr = parseFloat(tr.querySelector(".inp-precio").value)||0;
+    const s  = parseInt(tr.querySelector(".inp-stock").value)||0;
+    const m  = parseInt(tr.querySelector(".inp-min").value)||0;
+    const f  = tr.querySelector(".inp-fecha").value;
+    const est = estado(s,m);
+    const gan = pr - co;
+    const mg  = pr>0 ? parseFloat((gan/pr*100).toFixed(1)) : 0;
+    const val = co * s;
+    totalStock += s; totalValor += val;
+    if(est==="OK") ok++; else if(est==="BAJO") bajo++; else agot++;
+    filas.push([i+1, n, c, pf>0?pf:"—", s, m, est, co, pr, gan, mg, val, f]);
+  });
+
+  filas.push([]);
+  filas.push(["","","","","TOTALES","","",`OK: ${ok}  |  Bajo: ${bajo}  |  Agotado: ${agot}`,"","","",totalValor,""]);
+  filas.push(["","","","","Total unidades en stock:",totalStock]);
+
+  const ws = XLSX.utils.aoa_to_sheet(filas);
+
+  // Anchos de columnas
+  ws["!cols"] = [
+    {wch:4},{wch:42},{wch:12},{wch:8},{wch:7},{wch:8},{wch:10},
+    {wch:11},{wch:12},{wch:13},{wch:9},{wch:13},{wch:13}
+  ];
+
+  // Combinar título
+  ws["!merges"] = [{ s:{r:0,c:0}, e:{r:0,c:12} }, { s:{r:1,c:0}, e:{r:1,c:12} }];
+
+  XLSX.utils.book_append_sheet(wb, ws, "Existencias");
+
+  // ── Hoja 2: Resumen por marca
+  const porMarca = {};
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    const c  = tr.querySelector(".inp-cat").value;
+    const s  = parseInt(tr.querySelector(".inp-stock").value)||0;
+    const co = parseFloat(tr.querySelector(".inp-costo").value)||0;
+    const pr = parseFloat(tr.querySelector(".inp-precio").value)||0;
+    if(!porMarca[c]) porMarca[c] = {uds:0, valor:0, venta:0, prods:0};
+    porMarca[c].uds   += s;
+    porMarca[c].valor += co * s;
+    porMarca[c].venta += pr * s;
+    porMarca[c].prods++;
+  });
+
+  const filas2 = [];
+  filas2.push(["DOCTOR SMOKE — RESUMEN POR MARCA"]);
+  filas2.push([`Generado: ${fecha}`]);
+  filas2.push([]);
+  filas2.push(["Marca","Productos","Unidades en Stock","Valor en Stock (costo)","Valor Potencial (venta)","Ganancia Potencial"]);
+  Object.entries(porMarca).sort((a,b)=>b[1].uds-a[1].uds).forEach(([marca, d]) => {
+    filas2.push([marca, d.prods, d.uds, d.valor, d.venta, d.venta - d.valor]);
+  });
+  filas2.push([]);
+  filas2.push(["TOTAL","",totalStock,totalValor]);
+
+  const ws2 = XLSX.utils.aoa_to_sheet(filas2);
+  ws2["!cols"] = [{wch:14},{wch:10},{wch:18},{wch:22},{wch:22},{wch:18}];
+  ws2["!merges"] = [{ s:{r:0,c:0}, e:{r:0,c:5} }, { s:{r:1,c:0}, e:{r:1,c:5} }];
+  XLSX.utils.book_append_sheet(wb, ws2, "Por Marca");
+
+  XLSX.writeFile(wb, `DrSmoke_Inventario_${fecha}.xlsx`);
+}
+
+renderizar();
+</script>
+</body>
+</html>

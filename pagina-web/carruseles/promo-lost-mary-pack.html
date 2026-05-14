@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Carrusel · Pack 3 Lost Mary · Dr. Smoke</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --gold:#C9A84C;
+    --goldhi:#e8c96a;
+    --bg:#0a0a0f;
+    --bg1:#11111a;
+    --bg2:#18181f;
+    --white:#f5f0e8;
+    --white2:rgba(245,240,232,.7);
+    --white3:rgba(245,240,232,.35);
+  }
+  body{
+    background:#1a1a1a;
+    font-family:'Segoe UI',system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;
+    gap:24px;padding:40px 20px;
+  }
+  h1{color:#fff;font-size:1rem;opacity:.5;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
+
+  /* ---- SLIDE BASE ---- */
+  .slide{
+    width:1080px;height:1080px;
+    position:relative;overflow:hidden;
+    background:var(--bg);
+    border-radius:4px;
+    flex-shrink:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    text-align:center;
+    padding:80px;
+  }
+
+  /* grid helper label */
+  .slide-label{
+    color:#fff;opacity:.3;font-size:.75rem;
+    letter-spacing:.12em;text-transform:uppercase;
+    margin-top:8px;align-self:center;
+  }
+
+  /* ambient orbs */
+  .orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+  .orb-gold{width:420px;height:420px;background:radial-gradient(circle,rgba(201,168,76,.22),transparent 70%)}
+  .orb-blue{width:320px;height:320px;background:radial-gradient(circle,rgba(80,120,200,.12),transparent 70%)}
+
+  /* gold rule */
+  .rule{
+    width:48px;height:2px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    margin:0 auto;
+  }
+
+  /* eyebrow */
+  .eyebrow{
+    font-size:.7rem;font-weight:600;letter-spacing:.25em;
+    text-transform:uppercase;color:var(--gold);
+    margin-bottom:16px;
+  }
+
+  /* big title */
+  .big-title{
+    font-size:5.5rem;font-weight:800;line-height:1;
+    color:var(--white);letter-spacing:-.02em;
+    margin-bottom:8px;
+  }
+  .big-title span{color:var(--gold)}
+
+  /* sub */
+  .sub{
+    font-size:1.3rem;font-weight:400;
+    color:var(--white2);margin-bottom:32px;
+    line-height:1.5;
+  }
+
+  /* price block */
+  .price-block{
+    display:flex;align-items:baseline;gap:16px;
+    justify-content:center;
+    margin-bottom:28px;
+  }
+  .price-old{
+    font-size:1.6rem;font-weight:400;
+    color:var(--white3);text-decoration:line-through;
+  }
+  .price-new{
+    font-size:4rem;font-weight:800;
+    color:var(--gold);line-height:1;
+  }
+  .price-new sup{font-size:1.8rem;font-weight:600}
+  .price-new small{font-size:1.2rem;font-weight:400;opacity:.7}
+
+  /* badge */
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(201,168,76,.12);
+    border:1px solid rgba(201,168,76,.3);
+    border-radius:99px;
+    padding:.4rem 1.1rem;
+    font-size:.75rem;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:20px;
+  }
+
+  /* cta pill */
+  .cta{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--gold);
+    border-radius:99px;
+    padding:.9rem 2.4rem;
+    font-size:1rem;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;
+    color:var(--bg);
+    margin-top:8px;
+  }
+
+  /* divider line */
+  .hdivider{
+    width:100%;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(201,168,76,.2),transparent);
+    margin:20px 0;
+  }
+
+  /* flavors list */
+  .flavor-list{
+    display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+    margin:16px 0;
+  }
+  .flavor-pill{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:99px;
+    padding:.35rem 1rem;
+    font-size:.85rem;color:var(--white2);
+  }
+
+  /* stat row */
+  .stat-row{
+    display:flex;gap:48px;justify-content:center;margin-top:16px;
+  }
+  .stat{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .stat-num{font-size:2.8rem;font-weight:800;color:var(--gold);line-height:1}
+  .stat-label{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--white3)}
+
+  /* footer bar */
+  .footer-bar{
+    position:absolute;bottom:0;left:0;right:0;
+    background:rgba(0,0,0,.5);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-top:1px solid rgba(201,168,76,.15);
+    padding:18px 60px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .footer-brand{font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--white)}
+  .footer-brand span{color:var(--gold)}
+  .footer-ig{font-size:.8rem;color:var(--white3);letter-spacing:.06em}
+
+  /* slide-specific overrides */
+  /* S1: portada */
+  .s1 .big-title{font-size:4.2rem}
+
+  /* S3: flavors */
+  .s3 .flavor-pill.active{
+    background:rgba(201,168,76,.15);
+    border-color:rgba(201,168,76,.4);
+    color:var(--gold);
+    font-weight:600;
+  }
+
+  /* S4: precio hero */
+  .s4 .price-new{font-size:6rem}
+  .s4 .price-old{font-size:2rem}
+
+  /* page indicator dots */
+  .dots{
+    position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+    display:flex;gap:8px;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(255,255,255,.2);
+  }
+  .dot.on{background:var(--gold);width:20px;border-radius:3px;}
+
+  /* print / export hint */
+  @media screen{
+    .export-note{
+      color:#fff;opacity:.3;font-size:.7rem;
+      text-align:center;letter-spacing:.1em;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>Carrusel Instagram · Pack 3 Lost Mary 7500 · Dr. Smoke</h1>
+<p class="export-note">Cada cuadro = 1 slide 1080×1080 px · Usa screenshot o imprime a PDF para exportar</p>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 1 · PORTADA / HOOK
+════════════════════════════════════════════ -->
+<div class="slide s1">
+  <!-- orbs -->
+  <div class="orb orb-gold" style="top:-80px;right:-60px"></div>
+  <div class="orb orb-blue" style="bottom:-60px;left:-40px"></div>
+
+  <div class="badge">⭐ Más vendido</div>
+  <div class="rule" style="margin-bottom:24px"></div>
+  <p class="eyebrow">Pack Colección Premium</p>
+  <h2 class="big-title">3 Lost&nbsp;Mary<br><span>7500</span></h2>
+  <p class="sub">El pack que todo fumador premium necesita</p>
+  <div class="price-block">
+    <span class="price-old">$480 MXN</span>
+    <span class="price-new"><sup>$</sup>340 <small>MXN</small></span>
+  </div>
+  <div class="dots">
+    <div class="dot on"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="footer-bar">
+    <span class="footer-brand"><span>Dr.</span> Smoke</span>
+    <span class="footer-ig">@dr.smoke.tuxtla</span>
+  </div>
+</div>
+<p class="slide-label">Slide 1 · Portada</p>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 2 · ¿QUÉ INCLUYE?
+════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="orb orb-gold" style="bottom:-100px;left:-80px;opacity:.7"></div>
+
+  <p class="eyebrow">¿Qué incluye el pack?</p>
+  <div class="rule" style="margin-bottom:32px"></div>
+  <div class="stat-row">
+    <div class="stat">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Vapes</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">7,500</span>
+      <span class="stat-label">Puffs c/u</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">22,500</span>
+      <span class="stat-label">Puffs totales</span>
+    </div>
+  </div>
+  <div class="hdivider"></div>
+  <p class="sub" style="font-size:1.1rem;margin-bottom:16px">
+    Batería recargable · Nicotina 5% · Sabores premium<br>
+    Producto 100% original · Verificable
+  </p>
+  <p class="sub" style="font-size:1rem;color:var(--gold);font-weight:600">Elige 3 sabores distintos ✔</p>
+  <div class="dots" style="bottom:80px">
+    <div class="dot"></div>
+    <div class="dot on"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="footer-bar">
+    <span class="footer-brand"><span>Dr.</span> Smoke</span>
+    <span class="footer-ig">@dr.smoke.tuxtla</span>
+  </div>
+</div>
+<p class="slide-label">Slide 2 · ¿Qué incluye?</p>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 3 · SABORES
+════════════════════════════════════════════ -->
+<div class="slide s3">
+  <div class="orb orb-gold" style="top:-60px;left:-80px;opacity:.8"></div>
+  <div class="orb orb-blue" style="bottom:-40px;right:-60px"></div>
+
+  <p class="eyebrow">Elige tus sabores</p>
+  <div class="rule" style="margin-bottom:28px"></div>
+  <h2 class="big-title" style="font-size:3.2rem;margin-bottom:20px">Sabores<br><span>disponibles</span></h2>
+  <div class="flavor-list">
+    <span class="flavor-pill active">🍓 Strawberry Kiwi</span>
+    <span class="flavor-pill active">🍏 Sour Apple Ice</span>
+    <span class="flavor-pill active">🫐 Summer Berry Ice</span>
+    <span class="flavor-pill">🍉 Watermelon Ice</span>
+    <span class="flavor-pill">🍑 Peach Mango</span>
+    <span class="flavor-pill">🧊 Menthol Ice</span>
+    <span class="flavor-pill">🍇 Grape Ice</span>
+    <span class="flavor-pill">🍋 Lemon Mint</span>
+  </div>
+  <p class="sub" style="font-size:.9rem;margin-top:20px">Disponibilidad sujeta a existencia · Pregunta por más</p>
+  <div class="dots" style="bottom:80px">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot on"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="footer-bar">
+    <span class="footer-brand"><span>Dr.</span> Smoke</span>
+    <span class="footer-ig">@dr.smoke.tuxtla</span>
+  </div>
+</div>
+<p class="slide-label">Slide 3 · Sabores</p>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 4 · PRECIO HERO
+════════════════════════════════════════════ -->
+<div class="slide s4">
+  <div class="orb orb-gold" style="top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;opacity:.18"></div>
+
+  <div class="badge">💸 Ahorra $140 MXN</div>
+  <p class="eyebrow" style="margin-top:20px">Precio especial pack</p>
+  <div class="rule" style="margin:16px auto 28px"></div>
+  <div class="price-block" style="flex-direction:column;gap:4px">
+    <span class="price-old">Precio normal $480 MXN</span>
+    <span class="price-new"><sup>$</sup>340 <small>MXN</small></span>
+  </div>
+  <p class="sub">por los 3 vapes · Precio final sin cargos ocultos</p>
+  <div class="hdivider" style="margin:16px 0"></div>
+  <p class="sub" style="font-size:1rem;color:var(--gold);font-weight:600">
+    🚀 Envío gratis zona centro · UNACH · FacMed
+  </p>
+  <div class="dots" style="bottom:80px">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot on"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="footer-bar">
+    <span class="footer-brand"><span>Dr.</span> Smoke</span>
+    <span class="footer-ig">@dr.smoke.tuxtla</span>
+  </div>
+</div>
+<p class="slide-label">Slide 4 · Precio hero</p>
+
+<!-- ═══════════════════════════════════════════
+     SLIDE 5 · CTA / CIERRE
+════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="orb orb-gold" style="top:-100px;right:-100px;width:500px;height:500px;opacity:.25"></div>
+  <div class="orb orb-blue" style="bottom:-80px;left:-60px"></div>
+
+  <p class="eyebrow">¿Cómo pedirlo?</p>
+  <div class="rule" style="margin-bottom:28px"></div>
+  <h2 class="big-title" style="font-size:3rem;margin-bottom:16px">Es tan fácil<br>como <span>un mensaje</span></h2>
+  <p class="sub" style="margin-bottom:28px">
+    Escríbenos por WhatsApp y en minutos<br>coordinamos tu entrega a domicilio.
+  </p>
+  <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+    <span class="cta">📲 Pedir por WhatsApp</span>
+    <p style="font-size:.85rem;color:var(--white3)">o visítanos en Tuxtla Gutiérrez · Lun–Sáb 10:00–21:00</p>
+  </div>
+  <div class="hdivider" style="margin:28px 0 16px"></div>
+  <p style="font-size:.85rem;color:var(--gold);letter-spacing:.08em;font-weight:600">@dr.smoke.tuxtla · Dr. Smoke</p>
+  <div class="dots" style="bottom:80px">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot on"></div>
+  </div>
+  <div class="footer-bar">
+    <span class="footer-brand"><span>Dr.</span> Smoke</span>
+    <span class="footer-ig">@dr.smoke.tuxtla</span>
+  </div>
+</div>
+<p class="slide-label">Slide 5 · CTA / Cierre</p>
+
+</body>
+</html>

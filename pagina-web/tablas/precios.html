@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Doctor Smoke — Calculadora de Compra y Ganancia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #09090e;
+  --bg1:      #0f0f16;
+  --bg2:      #141420;
+  --surface:  #181826;
+  --surface2: #1e1e2e;
+  --border:   rgba(255,255,255,.07);
+  --gold:     #C9A84C;
+  --gold-hi:  #E2C76A;
+  --gold-dim: rgba(201,168,76,.15);
+  --gold-glow:rgba(201,168,76,.08);
+  --text:     #F0EFE9;
+  --text2:    #9e9ea8;
+  --text3:    #55556a;
+  --red:      #ff6b6b;
+  --red-bg:   rgba(255,107,107,.1);
+  --blue:     #6db3f2;
+  --blue-bg:  rgba(109,179,242,.1);
+  --green:    #52d668;
+  --green-bg: rgba(82,214,104,.1);
+  --yellow:   #f5c518;
+  --yellow-bg:rgba(245,197,24,.1);
+  --r:        10px;
+  --r-sm:     6px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 0 60px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,168,76,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(201,168,76,.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Page header ── */
+.page-header {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 16px;
+  padding: 28px 32px 0; flex-wrap: wrap;
+}
+.header-logo {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,.4); object-fit: cover;
+}
+.header-titles { flex: 1; min-width: 200px; }
+.header-eyebrow {
+  font-size: .72rem; font-weight: 500; letter-spacing: .18em;
+  color: var(--gold); text-transform: uppercase; margin-bottom: 2px;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; font-weight: 300; line-height: 1.1;
+}
+.header-title em { font-style: italic; color: var(--gold-hi); }
+.header-sub { font-size: .82rem; color: var(--text3); margin-top: 3px; }
+.header-date {
+  font-size: .75rem; color: var(--text3);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 12px; white-space: nowrap;
+}
+.gold-rule {
+  display: block; height: 1px; margin: 20px 32px 0;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold-hi) 50%, var(--gold) 70%, transparent);
+  opacity: .35; position: relative; z-index: 1;
+}
+
+/* ── Summary cards ── */
+.summary {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 12px; padding: 20px 32px;
+}
+.scard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px;
+  transition: border-color .2s, transform .15s;
+}
+.scard:hover { border-color: rgba(201,168,76,.3); transform: translateY(-1px); }
+.scard-label {
+  font-size: .68rem; font-weight: 500; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 6px;
+}
+.scard-value {
+  font-size: 1.55rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sv-yellow { color: var(--yellow); }
+.sv-red    { color: var(--red); }
+.sv-blue   { color: var(--blue); }
+.sv-green  { color: var(--green); }
+.sv-gold   { color: var(--gold-hi); }
+.sv-gray   { color: var(--text2); }
+.scard-sub { font-size: .72rem; color: var(--text3); margin-top: 3px; }
+
+/* ── Controls ── */
+.controls {
+  position: relative; z-index: 1;
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  padding: 0 32px 16px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: var(--r-sm); border: none;
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 500;
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.btn-gold  { background: linear-gradient(135deg, #C9A84C, #E2C76A); color: #0a0a10; }
+.btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-ghost { background: var(--surface); color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: rgba(201,168,76,.35); color: var(--gold-hi); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(255,107,107,.2); }
+.btn-danger:hover { background: rgba(255,107,107,.2); }
+
+.search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 260px; }
+.search-ico  { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+.search-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 8px 10px 8px 32px;
+  border-radius: var(--r-sm); font-family: 'Outfit', sans-serif; font-size: .83rem;
+  transition: border-color .18s;
+}
+.search-input:focus { outline: none; border-color: rgba(201,168,76,.5); }
+.search-input::placeholder { color: var(--text3); }
+.select-ctrl {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text2); padding: 8px 12px;
+  border-radius: var(--r-sm); font-family: 'Outfit', sans-serif; font-size: .83rem;
+  cursor: pointer; transition: border-color .18s;
+}
+.select-ctrl:focus { outline: none; border-color: rgba(201,168,76,.5); }
+.select-ctrl option { background: var(--surface2); }
+
+/* ── Table ── */
+.table-wrap {
+  position: relative; z-index: 1;
+  margin: 0 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.table-scroll { overflow-x: auto; }
+.table-scroll::-webkit-scrollbar { height: 5px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--bg2); }
+.table-scroll::-webkit-scrollbar-thumb { background: rgba(201,168,76,.25); border-radius: 3px; }
+
+table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: .84rem; }
+
+thead th {
+  background: var(--surface2);
+  padding: 11px 10px; text-align: center; white-space: nowrap;
+  font-size: .7rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+  border-bottom: 1px solid rgba(201,168,76,.2);
+  cursor: pointer; user-select: none; transition: color .15s;
+}
+thead th:hover { color: var(--gold-hi); }
+thead th.no-sort { cursor: default; }
+thead th.sort-asc::after  { content: ' ↑'; }
+thead th.sort-desc::after { content: ' ↓'; }
+
+/* column color accents */
+.th-num   { color: var(--text3); }
+.th-prod  { color: var(--text); text-align: left !important; }
+.th-cant  { color: var(--yellow); }
+.th-costo { color: var(--red); }
+.th-venta { color: var(--blue); }
+.th-gan   { color: var(--green); }
+.th-mg    { color: var(--text2); }
+.th-gold  { color: var(--gold); }
+
+tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--gold-glow); }
+tbody tr.has-qty { background: rgba(201,168,76,.04); }
+tbody td { padding: 8px 10px; text-align: center; vertical-align: middle; }
+tbody td.left { text-align: left; }
+
+/* inputs */
+.cell-inp {
+  background: transparent; border: 1px solid transparent; color: var(--text);
+  padding: 4px 6px; border-radius: 4px;
+  font-family: 'Outfit', sans-serif; font-size: .84rem; width: 100%;
+  transition: border-color .15s, background .15s;
+}
+.cell-inp:focus { outline: none; border-color: rgba(201,168,76,.5); background: rgba(201,168,76,.06); }
+.cell-inp.num  { text-align: right; }
+.cell-inp.center { text-align: center; }
+
+/* ── Quantity stepper ── */
+.stepper {
+  display: inline-flex; align-items: center; gap: 0;
+  background: var(--bg2); border: 1px solid rgba(245,197,24,.3);
+  border-radius: 8px; overflow: hidden; transition: border-color .15s;
+}
+.stepper:focus-within { border-color: rgba(245,197,24,.6); box-shadow: 0 0 0 2px rgba(245,197,24,.08); }
+.stepper-btn {
+  background: none; border: none; cursor: pointer; color: var(--text2);
+  width: 28px; height: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 300; line-height: 1;
+  transition: background .15s, color .15s; flex-shrink: 0; user-select: none;
+}
+.stepper-btn:hover  { background: rgba(245,197,24,.15); color: var(--yellow); }
+.stepper-btn:active { background: rgba(245,197,24,.28); }
+.stepper-btn.minus:hover { background: var(--red-bg); color: var(--red); }
+.stepper-btn.minus:active { background: rgba(255,107,107,.22); }
+.inp-cant {
+  width: 44px; background: transparent; border: none;
+  color: var(--yellow); font-family: 'Outfit', sans-serif;
+  font-size: .9rem; font-weight: 700; text-align: center;
+  padding: 0; font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.inp-cant:focus { outline: none; }
+.inp-cant::-webkit-inner-spin-button,
+.inp-cant::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* computed cells */
+.td-tc  { color: var(--red);   font-weight: 600; font-variant-numeric: tabular-nums; }
+.td-tv  { color: var(--blue);  font-weight: 600; font-variant-numeric: tabular-nums; }
+.td-gn  { font-weight: 700; font-variant-numeric: tabular-nums; }
+.td-gn.pos { color: var(--green); }
+.td-gn.neg { color: var(--red); }
+.td-mg  { color: var(--text2); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.td-mg.high { color: var(--green); }
+.td-mg.low  { color: var(--red); }
+.td-idx { color: var(--text3); font-size: .76rem; }
+
+/* margin bar */
+.mg-wrap { display: flex; flex-direction: column; gap: 3px; min-width: 70px; }
+.mg-bar  { height: 3px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+.mg-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+
+/* brand badge */
+.brand-pill {
+  display: inline-block; padding: 2px 9px; border-radius: 20px;
+  font-size: .7rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.bp-waka    { background: rgba(109,179,242,.12); color: var(--blue); }
+.bp-nexa    { background: rgba(201,168,76,.12);  color: var(--gold); }
+.bp-lostmary{ background: rgba(255,107,107,.12); color: var(--red); }
+.bp-lostvape{ background: rgba(255,107,107,.1);  color: #ff9a9a; }
+.bp-bugatti { background: rgba(82,214,104,.1);   color: var(--green); }
+.bp-muha    { background: rgba(201,168,76,.1);   color: var(--gold-hi); }
+.bp-otro    { background: var(--surface2); color: var(--text2); }
+
+.btn-del {
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  padding: 5px 8px; border-radius: 4px; font-size: .85rem; transition: all .15s;
+}
+.btn-del:hover { background: var(--red-bg); color: var(--red); }
+
+/* tfoot */
+tfoot tr td {
+  background: var(--surface2); padding: 10px 10px;
+  font-weight: 700; font-size: .85rem; text-align: center;
+  border-top: 1px solid rgba(201,168,76,.2);
+}
+tfoot .ft-lbl { color: var(--text3); text-align: left; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+tfoot .ft-cant { color: var(--yellow); }
+tfoot .ft-tc   { color: var(--red); }
+tfoot .ft-tv   { color: var(--blue); }
+tfoot .ft-gn   { color: var(--green); }
+tfoot .ft-mg   { color: var(--text2); font-size: .8rem; }
+
+/* empty state */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty-state p { font-size: .88rem; margin-top: 10px; }
+
+/* ROI panel */
+.roi-panel {
+  position: relative; z-index: 1;
+  margin: 16px 32px 0;
+  background: var(--surface); border: 1px solid rgba(201,168,76,.2);
+  border-radius: var(--r); padding: 16px 20px;
+}
+.roi-title {
+  font-size: .72rem; font-weight: 500; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+}
+.roi-grid { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+.roi-item { display: flex; flex-direction: column; gap: 3px; }
+.roi-label { font-size: .68rem; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+.roi-value { font-size: 1.1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.roi-bar-wrap { flex: 1; min-width: 180px; }
+.roi-bar { height: 8px; background: var(--bg2); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.roi-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--gold), var(--green)); transition: width .6s cubic-bezier(.4,0,.2,1); }
+.roi-note { font-size: .75rem; color: var(--text3); margin-top: 6px; }
+
+/* Legend */
+.legend {
+  position: relative; z-index: 1;
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+  padding: 14px 32px 0; font-size: .76rem; color: var(--text3);
+}
+.legend span { display: flex; align-items: center; gap: 6px; }
+.ldot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .page-header, .controls, .legend, .roi-panel { padding-left: 16px; padding-right: 16px; }
+  .summary { padding: 16px; }
+  .table-wrap { margin: 0 16px; }
+  .roi-panel { margin: 16px 16px 0; }
+}
+@media (max-width: 600px) {
+  .header-title { font-size: 1.5rem; }
+  .summary { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="page-header">
+  <img class="header-logo" src="../assets/images/logos/WhatsApp Image 2026-03-27 at 8.50.51 PM.jpeg"
+       alt="Doctor Smoke" onerror="this.style.display='none'"/>
+  <div class="header-titles">
+    <p class="header-eyebrow">Doctor Smoke · Panel</p>
+    <h1 class="header-title">Calculadora de <em>Compra & Ganancia</em></h1>
+    <p class="header-sub">Escribe la cantidad a comprar — precio costo, venta y margen se calculan al instante</p>
+  </div>
+  <div class="header-date" id="hdrDate"></div>
+</header>
+<span class="gold-rule"></span>
+
+<!-- ── Summary cards ── -->
+<div class="summary">
+  <div class="scard">
+    <div class="scard-label">Unidades</div>
+    <div class="scard-value sv-yellow" id="s-cant">0</div>
+    <div class="scard-sub">a comprar</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Inversión</div>
+    <div class="scard-value sv-red" id="s-tc">$0</div>
+    <div class="scard-sub">total costo</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Venta Esperada</div>
+    <div class="scard-value sv-blue" id="s-tv">$0</div>
+    <div class="scard-sub">total venta</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Ganancia Neta</div>
+    <div class="scard-value sv-green" id="s-gn">$0</div>
+    <div class="scard-sub">si se vende todo</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">Margen Prom.</div>
+    <div class="scard-value sv-gray" id="s-mg">0%</div>
+    <div class="scard-sub">sobre venta</div>
+  </div>
+  <div class="scard">
+    <div class="scard-label">ROI</div>
+    <div class="scard-value sv-gold" id="s-roi">0%</div>
+    <div class="scard-sub">retorno inversión</div>
+  </div>
+</div>
+
+<!-- ── ROI bar panel ── -->
+<div class="roi-panel">
+  <div class="roi-title">Proyección de ganancia</div>
+  <div class="roi-grid">
+    <div class="roi-item">
+      <span class="roi-label">Inversión</span>
+      <span class="roi-value" style="color:var(--red)" id="r2-tc">$0</span>
+    </div>
+    <div class="roi-item">
+      <span class="roi-label">Ganancia</span>
+      <span class="roi-value" style="color:var(--green)" id="r2-gn">$0</span>
+    </div>
+    <div class="roi-item">
+      <span class="roi-label">ROI</span>
+      <span class="roi-value" style="color:var(--gold-hi)" id="r2-roi">0%</span>
+    </div>
+    <div class="roi-bar-wrap">
+      <div class="roi-label">Ganancia / Venta total</div>
+      <div class="roi-bar"><div class="roi-fill" id="r2-bar" style="width:0%"></div></div>
+      <div class="roi-note" id="r2-note">Agrega cantidades para ver la proyección</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Controls ── -->
+<div class="controls" style="margin-top:16px">
+  <button class="btn btn-gold" onclick="agregarFila()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
+    </svg>
+    Agregar producto
+  </button>
+  <button class="btn btn-ghost" onclick="exportarCSV()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M2 10v2h10v-2M7 2v7M4 6l3 3 3-3"/>
+    </svg>
+    Exportar CSV
+  </button>
+  <button class="btn btn-danger" onclick="limpiarCantidades()">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M1 1l11 11M12 1L1 12"/>
+    </svg>
+    Limpiar cantidades
+  </button>
+  <div class="search-wrap">
+    <span class="search-ico">⌕</span>
+    <input class="search-input" type="text" id="buscar" placeholder="Buscar producto…" oninput="filtrar()"/>
+  </div>
+  <select class="select-ctrl" id="filtroMarca" onchange="filtrar()">
+    <option value="">Todas las marcas</option>
+    <option value="Waka">Waka</option>
+    <option value="Nexa">Nexa</option>
+    <option value="Lost Mary">Lost Mary</option>
+    <option value="Lost Vape">Lost Vape</option>
+    <option value="Bugatti">Bugatti</option>
+    <option value="Muha Meds">Muha Meds</option>
+  </select>
+  <select class="select-ctrl" id="filtroCon" onchange="filtrar()">
+    <option value="">Todos</option>
+    <option value="con">Con cantidad</option>
+    <option value="sin">Sin cantidad</option>
+  </select>
+</div>
+
+<!-- ── Table ── -->
+<div class="table-wrap">
+  <div class="table-scroll">
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th class="th-num no-sort" style="width:36px">#</th>
+          <th class="th-prod" data-col="nombre" style="min-width:220px;text-align:left">Producto</th>
+          <th class="th-gold" data-col="marca">Marca</th>
+          <th data-col="puffs" style="color:var(--text2)">Puffs</th>
+          <th class="th-cant no-sort">Cantidad</th>
+          <th class="th-costo" data-col="costo">P. Costo</th>
+          <th class="th-costo no-sort">Total Costo</th>
+          <th class="th-venta" data-col="venta">P. Venta</th>
+          <th class="th-venta no-sort">Total Venta</th>
+          <th class="th-gan no-sort">Ganancia</th>
+          <th class="th-mg no-sort" style="min-width:90px">Margen %</th>
+          <th class="no-sort" style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="ft-lbl">Totales</td>
+          <td class="ft-cant" id="ft-cant">0</td>
+          <td></td>
+          <td class="ft-tc" id="ft-tc">$0</td>
+          <td></td>
+          <td class="ft-tv" id="ft-tv">$0</td>
+          <td class="ft-gn" id="ft-gn">$0</td>
+          <td class="ft-mg" id="ft-mg">0%</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      <p>No hay resultados para esta búsqueda.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Legend ── -->
+<div class="legend">
+  <span><span class="ldot" style="background:var(--yellow)"></span>Amarillo = cantidad a comprar</span>
+  <span><span class="ldot" style="background:var(--red)"></span>Rojo = costo / inversión</span>
+  <span><span class="ldot" style="background:var(--blue)"></span>Azul = precio y venta</span>
+  <span><span class="ldot" style="background:var(--green)"></span>Verde = ganancia neta</span>
+  <span><span class="ldot" style="background:var(--gold)"></span>Dorado = marca / ROI</span>
+</div>
+
+<script>
+// ── Date
+(function(){
+  const d = new Date();
+  document.getElementById('hdrDate').textContent =
+    d.toLocaleDateString('es-MX', {weekday:'long',year:'numeric',month:'long',day:'numeric'})
+     .replace(/^\w/, c => c.toUpperCase());
+})();
+
+// ── Helpers
+const fmt  = n => "$" + Number(n).toLocaleString("es-MX", {minimumFractionDigits:0});
+const fmtP = n => n > 0 ? n.toFixed(1) + "%" : "0%";
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+// ── Brand → class map
+function brandClass(marca){
+  const m = marca.toLowerCase().replace(/\s+/g,"");
+  if(m.includes("waka"))     return "bp-waka";
+  if(m.includes("nexa"))     return "bp-nexa";
+  if(m.includes("lostmary")) return "bp-lostmary";
+  if(m.includes("lostvape")) return "bp-lostvape";
+  if(m.includes("bugatti"))  return "bp-bugatti";
+  if(m.includes("muha"))     return "bp-muha";
+  return "bp-otro";
+}
+
+// ── Margin color
+function mgColor(mg){
+  if(mg >= 35) return "var(--green)";
+  if(mg >= 20) return "var(--yellow)";
+  return "var(--red)";
+}
+
+// ── Productos
+const productos = [
+  // Muha Meds
+  {nombre:"Muha Meds 3.5gr — Venom OG (hybrid)",        marca:"Muha Meds", puffs:"3.5gr", costo:485, venta:0},
+  {nombre:"Muha Meds 3.5gr — Mango Peach Ring (hybrid)",marca:"Muha Meds", puffs:"3.5gr", costo:485, venta:0},
+  {nombre:"Muha Meds 3.5gr — Rainbow Belts (hybrid)",   marca:"Muha Meds", puffs:"3.5gr", costo:485, venta:0},
+  // Lost Vape
+  {nombre:"Lost Vape Orión Bar — Mixtos (pack 10 pzs)", marca:"Lost Vape", puffs:"7.5k×10", costo:600, venta:0},
+  // Bugatti
+  {nombre:"Bugatti 7k — Tropical Mango",                marca:"Bugatti",   puffs:"7k",  costo:85,  venta:200},
+  {nombre:"Bugatti 7k — Wiki Dragón Berry",             marca:"Bugatti",   puffs:"7k",  costo:85,  venta:200},
+  // Waka GO 10k
+  {nombre:"Waka Go 10k — Mango Lychee",                 marca:"Waka",      puffs:"10k", costo:160, venta:280},
+  {nombre:"Waka Go 10k — Blueberry Mint",               marca:"Waka",      puffs:"10k", costo:160, venta:280},
+  {nombre:"Waka Go 10k — Mr Peach",                     marca:"Waka",      puffs:"10k", costo:160, venta:280},
+  {nombre:"Waka Go 10k — BlackBerry",                   marca:"Waka",      puffs:"10k", costo:160, venta:280},
+  {nombre:"Waka Go 10k — Piña Colada",                  marca:"Waka",      puffs:"10k", costo:160, venta:280},
+  {nombre:"Waka Go 10k — Peach Blue Raspberry",         marca:"Waka",      puffs:"10k", costo:160, venta:280},
+  // Waka 15k
+  {nombre:"Waka SoPro 15k — Cool Mint",                 marca:"Waka",      puffs:"15k", costo:185, venta:320},
+  {nombre:"Waka SoPro 15k — Cherry Berry",              marca:"Waka",      puffs:"15k", costo:185, venta:320},
+  {nombre:"Waka SoPro 15k — Piña Colada",               marca:"Waka",      puffs:"15k", costo:185, venta:320},
+  {nombre:"Waka SoPro 15k — Watermelon Kiwi",           marca:"Waka",      puffs:"15k", costo:185, venta:320},
+  // Waka 30k
+  {nombre:"Waka Pro 30k — Blueberry Splash",            marca:"Waka",      puffs:"30k", costo:230, venta:380},
+  {nombre:"Waka Pro 30k — Strawberry Kiwi",             marca:"Waka",      puffs:"30k", costo:230, venta:380},
+  {nombre:"Waka soPro Titan 30k — Cherry Watermelón",   marca:"Waka",      puffs:"30k", costo:230, venta:380},
+  // Waka Blade 33k
+  {nombre:"Waka Blade 33k — Coco Strawberry",           marca:"Waka",      puffs:"33k", costo:235, venta:380},
+  {nombre:"Waka Blade 33k — Passion Fruit",             marca:"Waka",      puffs:"33k", costo:235, venta:380},
+  {nombre:"Waka Blade 33k — Blueberry Splash",          marca:"Waka",      puffs:"33k", costo:235, venta:380},
+  // Waka Burst 36k
+  {nombre:"Waka Burst 36k — Pink Lemonade",             marca:"Waka",      puffs:"36k", costo:235, venta:380},
+  {nombre:"Waka Burst 36k — Miami Mint / Watermelon Ice",marca:"Waka",     puffs:"36k", costo:235, venta:380},
+  {nombre:"Waka Burst 36k — Kiwi Strawberry",           marca:"Waka",      puffs:"36k", costo:235, venta:380},
+  {nombre:"Waka Burst 36k — Strawberry Banana",         marca:"Waka",      puffs:"36k", costo:235, venta:380},
+  {nombre:"Waka Burst 36k — Cherry Bomb",               marca:"Waka",      puffs:"36k", costo:235, venta:380},
+  {nombre:"Waka Burst 36k — Blueberry Watermelon",      marca:"Waka",      puffs:"36k", costo:235, venta:380},
+  {nombre:"Waka Burst 36k — Strawberry Refresher",      marca:"Waka",      puffs:"36k", costo:235, venta:380},
+  // Waka Icon 50k
+  {nombre:"Waka Icon 50k — Fresh Mint",                 marca:"Waka",      puffs:"50k", costo:260, venta:450},
+  {nombre:"Waka Icon 50k — Cherry Watermelón",          marca:"Waka",      puffs:"50k", costo:260, venta:450},
+  {nombre:"Waka Icon 50k — Peach Mango Watermelón",     marca:"Waka",      puffs:"50k", costo:260, venta:450},
+  {nombre:"Waka Icon 50k — Kiwi Dragon Berry",          marca:"Waka",      puffs:"50k", costo:260, venta:450},
+  {nombre:"Waka Icon 50k — Watermelon Ice",             marca:"Waka",      puffs:"50k", costo:260, venta:450},
+  // Lost Mary
+  {nombre:"Lost Mary OS5000 — Berry Cherry",            marca:"Lost Mary",  puffs:"5k",  costo:70,  venta:120},
+  // Lost Vape Orion Bar
+  {nombre:"Lost Vape Orion Bar 7500 — Strawberry Kiwi", marca:"Lost Vape", puffs:"7.5k",costo:70,  venta:120},
+  {nombre:"Lost Vape Orion Bar 7500 — Sour Apple Ice",  marca:"Lost Vape", puffs:"7.5k",costo:70,  venta:120},
+  {nombre:"Lost Vape Orion Bar 7500 — Ice Cap",         marca:"Lost Vape", puffs:"7.5k",costo:70,  venta:120},
+  {nombre:"Lost Vape Orion Bar 7500 — Peach Mango Watermelon", marca:"Lost Vape", puffs:"7.5k", costo:70, venta:120},
+  {nombre:"Lost Vape Orion Bar 7500 — Summer Berry Ice (Ltd.)", marca:"Lost Vape", puffs:"7.5k", costo:70, venta:120},
+];
+
+// ── Row creation
+function crearFila(p, idx){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td class="td-idx">${idx + 1}</td>
+    <td class="left">
+      <input type="text" class="cell-inp inp-nombre" value="${p.nombre}" style="min-width:200px">
+    </td>
+    <td>
+      <span class="brand-pill ${brandClass(p.marca)} inp-marca-pill">${p.marca}</span>
+      <input type="hidden" class="inp-marca" value="${p.marca}">
+    </td>
+    <td>
+      <input type="text" class="cell-inp center inp-puffs" value="${p.puffs}" style="width:70px">
+    </td>
+    <td>
+      <div class="stepper">
+        <button type="button" class="stepper-btn minus" onclick="stepCant(this,-1)" tabindex="-1">−</button>
+        <input type="number" class="inp-cant" value="0" min="0" step="1">
+        <button type="button" class="stepper-btn plus"  onclick="stepCant(this,+1)" tabindex="-1">+</button>
+      </div>
+    </td>
+    <td>
+      <input type="number" class="cell-inp num inp-costo" value="${p.costo}" min="0" style="width:72px">
+    </td>
+    <td class="td-tc td-tc-val">$0</td>
+    <td>
+      <input type="number" class="cell-inp num inp-venta" value="${p.venta}" min="0" style="width:72px">
+    </td>
+    <td class="td-tv td-tv-val">$0</td>
+    <td class="td-gn td-gn-val">$0</td>
+    <td>
+      <div class="mg-wrap">
+        <span class="td-mg td-mg-val"></span>
+        <div class="mg-bar"><div class="mg-fill td-mg-bar" style="width:0%;background:var(--text3)"></div></div>
+      </div>
+    </td>
+    <td><button class="btn-del" title="Eliminar" onclick="eliminarFila(this)">✕</button></td>
+  `;
+  tr.querySelectorAll("input").forEach(el => el.addEventListener("input", () => {
+    recalcFila(tr); actualizarTotales();
+  }));
+  // update pill when marca input changes
+  const mInput = tr.querySelector(".inp-nombre");
+  return tr;
+}
+
+function stepCant(btn, delta){
+  const tr  = btn.closest("tr");
+  const inp = tr.querySelector(".inp-cant");
+  const val = (parseInt(inp.value) || 0) + delta;
+  inp.value = Math.max(0, val);
+  recalcFila(tr);
+  actualizarTotales();
+}
+
+function recalcFila(tr){
+  const cant  = parseInt(tr.querySelector(".inp-cant").value)   || 0;
+  const costo = parseFloat(tr.querySelector(".inp-costo").value) || 0;
+  const venta = parseFloat(tr.querySelector(".inp-venta").value) || 0;
+  const tc = costo * cant;
+  const tv = venta  * cant;
+  const gn = tv - tc;
+  const mg = tv > 0 ? (gn / tv * 100) : 0;
+
+  tr.querySelector(".td-tc-val").textContent = cant > 0 ? fmt(tc) : "—";
+  tr.querySelector(".td-tv-val").textContent = cant > 0 ? fmt(tv) : "—";
+
+  const gnEl = tr.querySelector(".td-gn-val");
+  gnEl.textContent = cant > 0 ? fmt(gn) : "—";
+  gnEl.className = "td-gn td-gn-val" + (cant > 0 ? (gn >= 0 ? " pos" : " neg") : "");
+
+  const mgEl  = tr.querySelector(".td-mg-val");
+  const barEl = tr.querySelector(".td-mg-bar");
+  if(cant > 0 && tv > 0){
+    mgEl.textContent = fmtP(mg);
+    mgEl.style.color = mgColor(mg);
+    barEl.style.width = clamp(mg, 0, 100) + "%";
+    barEl.style.background = mgColor(mg);
+  } else {
+    mgEl.textContent = "";
+    barEl.style.width = "0%";
+  }
+
+  tr.classList.toggle("has-qty", cant > 0);
+}
+
+function actualizarTotales(){
+  let tc = 0, tv = 0, cant = 0;
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    const c  = parseInt(tr.querySelector(".inp-cant")?.value)   || 0;
+    const co = parseFloat(tr.querySelector(".inp-costo")?.value) || 0;
+    const ve = parseFloat(tr.querySelector(".inp-venta")?.value) || 0;
+    cant += c; tc += co * c; tv += ve * c;
+  });
+  const gn  = tv - tc;
+  const mg  = tv > 0 ? (gn / tv * 100) : 0;
+  const roi = tc > 0 ? (gn / tc * 100) : 0;
+
+  // tfoot
+  document.getElementById("ft-cant").textContent = cant;
+  document.getElementById("ft-tc").textContent   = fmt(tc);
+  document.getElementById("ft-tv").textContent   = fmt(tv);
+  document.getElementById("ft-gn").textContent   = fmt(gn);
+  document.getElementById("ft-mg").textContent   = fmtP(mg);
+
+  // cards
+  document.getElementById("s-cant").textContent = cant;
+  document.getElementById("s-tc").textContent   = fmt(tc);
+  document.getElementById("s-tv").textContent   = fmt(tv);
+  document.getElementById("s-gn").textContent   = fmt(gn);
+  document.getElementById("s-mg").textContent   = fmtP(mg);
+  document.getElementById("s-roi").textContent  = fmtP(roi);
+
+  // ROI panel
+  document.getElementById("r2-tc").textContent  = fmt(tc);
+  document.getElementById("r2-gn").textContent  = fmt(gn);
+  document.getElementById("r2-roi").textContent = fmtP(roi);
+  const barPct = tv > 0 ? clamp(mg, 0, 100) : 0;
+  document.getElementById("r2-bar").style.width = barPct + "%";
+  document.getElementById("r2-note").textContent = cant > 0
+    ? `Por cada $100 invertidos recuperas $${(100 + roi).toFixed(0)} (ROI ${roi.toFixed(1)}%)`
+    : "Agrega cantidades para ver la proyección";
+
+  // color ganancia card
+  const gnCard = document.getElementById("s-gn");
+  gnCard.style.color = gn >= 0 ? "var(--green)" : "var(--red)";
+}
+
+function renumerar(){
+  document.querySelectorAll("#cuerpo tr").forEach((tr, i) => {
+    const td = tr.querySelector(".td-idx");
+    if(td) td.textContent = i + 1;
+  });
+}
+
+function renderizar(){
+  const tbody = document.getElementById("cuerpo");
+  tbody.innerHTML = "";
+  productos.forEach((p, i) => tbody.appendChild(crearFila(p, i)));
+  actualizarTotales();
+}
+
+function agregarFila(){
+  const tbody = document.getElementById("cuerpo");
+  const idx   = tbody.rows.length;
+  const tr    = crearFila({nombre:"", marca:"Waka", puffs:"", costo:0, venta:0}, idx);
+  tbody.appendChild(tr);
+  actualizarTotales();
+  tr.querySelector(".inp-nombre").focus();
+  tr.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function eliminarFila(btn){
+  btn.closest("tr").remove();
+  renumerar();
+  actualizarTotales();
+}
+
+function limpiarCantidades(){
+  document.querySelectorAll(".inp-cant").forEach(inp => { inp.value = 0; });
+  document.querySelectorAll("#cuerpo tr").forEach(tr => recalcFila(tr));
+  actualizarTotales();
+}
+
+// ── Filter
+function filtrar(){
+  const q    = document.getElementById("buscar").value.toLowerCase().trim();
+  const marc = document.getElementById("filtroMarca").value;
+  const con  = document.getElementById("filtroCon").value;
+  let visible = 0;
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    const nombre = tr.querySelector(".inp-nombre")?.value.toLowerCase() || "";
+    const marca  = tr.querySelector(".inp-marca")?.value || "";
+    const cant   = parseInt(tr.querySelector(".inp-cant")?.value) || 0;
+    const okQ    = !q    || nombre.includes(q);
+    const okM    = !marc || marca === marc;
+    const okC    = !con  || (con === "con" ? cant > 0 : cant === 0);
+    const show   = okQ && okM && okC;
+    tr.style.display = show ? "" : "none";
+    if(show) visible++;
+  });
+  document.getElementById("emptyState").style.display = visible === 0 ? "" : "none";
+  actualizarTotales();
+}
+
+// ── Sort
+document.querySelectorAll("thead th[data-col]").forEach(th => {
+  let dir = 1;
+  th.addEventListener("click", () => {
+    document.querySelectorAll("thead th").forEach(h => h.classList.remove("sort-asc","sort-desc"));
+    th.classList.add(dir === 1 ? "sort-asc" : "sort-desc");
+    const col = th.dataset.col;
+    const tbody = document.getElementById("cuerpo");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+    filas.sort((a, b) => {
+      const va = getCellVal(a, col), vb = getCellVal(b, col);
+      return typeof va === "number" ? (va - vb) * dir : va.localeCompare(vb, "es") * dir;
+    });
+    filas.forEach(tr => tbody.appendChild(tr));
+    dir *= -1;
+    renumerar();
+  });
+});
+
+function getCellVal(tr, col){
+  const map = {
+    nombre: () => tr.querySelector(".inp-nombre")?.value || "",
+    marca:  () => tr.querySelector(".inp-marca")?.value  || "",
+    puffs:  () => tr.querySelector(".inp-puffs")?.value  || "",
+    costo:  () => parseFloat(tr.querySelector(".inp-costo")?.value) || 0,
+    venta:  () => parseFloat(tr.querySelector(".inp-venta")?.value) || 0,
+  };
+  return map[col] ? map[col]() : "";
+}
+
+// ── Export CSV
+function exportarCSV(){
+  let csv = "#,Producto,Marca,Puffs,Cantidad,Precio Costo,Total Costo,Precio Venta,Total Venta,Ganancia Neta,Margen %,ROI %\n";
+  document.querySelectorAll("#cuerpo tr").forEach((tr, i) => {
+    const n  = tr.querySelector(".inp-nombre").value;
+    const ma = tr.querySelector(".inp-marca").value;
+    const pu = tr.querySelector(".inp-puffs").value;
+    const ca = parseInt(tr.querySelector(".inp-cant").value)    || 0;
+    const co = parseFloat(tr.querySelector(".inp-costo").value) || 0;
+    const ve = parseFloat(tr.querySelector(".inp-venta").value) || 0;
+    const tc = co * ca, tv = ve * ca, gn = tv - tc;
+    const mg = tv > 0 ? (gn/tv*100).toFixed(1)+"%" : "";
+    const roi= co > 0 && ca > 0 ? (gn/tc*100).toFixed(1)+"%" : "";
+    csv += `${i+1},"${n}","${ma}","${pu}",${ca},${co},${tc},${ve},${tv},${gn},${mg},${roi}\n`;
+  });
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8,﻿" + encodeURIComponent(csv);
+  a.download = "DrSmoke_Calculadora_" + new Date().toISOString().split("T")[0] + ".csv";
+  a.click();
+}
+
+renderizar();
+</script>
+</body>
+</html>

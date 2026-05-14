@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DR. SMOKE — Registro de Ventas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:    #09090e;
+  --bg1:   #0f0f16;
+  --bg2:   #141420;
+  --surface:#181826;
+  --gold:  #C9A84C;
+  --goldhi:#E2C76A;
+  --goldlo:rgba(201,168,76,.09);
+  --goldbr:rgba(201,168,76,.22);
+  --white: #F0EFE9;
+  --white2:#96968C;
+  --white3:#525248;
+  --border:rgba(255,255,255,.07);
+  --fd:'Cormorant Garamond',serif;
+  --fb:'Outfit',sans-serif;
+  --tx:.3s cubic-bezier(.4,0,.2,1);
+  --francisco:#5dde7a;
+  --bofo:#6db3f2;
+  --axel:#b07cf2;
+  --r:10px;
+  --r-sm:6px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--white); font-family:var(--fb);
+  line-height:1.65; overflow-x:hidden; -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+a { color:inherit; text-decoration:none; }
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,168,76,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(201,168,76,.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* grain overlay */
+body::after {
+  content:''; position:fixed; inset:0; z-index:9999; pointer-events:none; opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:220px;
+}
+
+/* ── HEADER ── */
+.header {
+  position:relative; overflow:hidden;
+  background:
+    radial-gradient(ellipse 80% 100% at 70% 20%, rgba(201,168,76,.08) 0%, transparent 60%),
+    linear-gradient(160deg, #110f18 0%, #09090e 45%, #0d0b0c 100%);
+  border-bottom:1px solid var(--goldbr);
+  padding:28px 40px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+}
+.header::before {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:linear-gradient(to right, transparent, var(--gold), transparent);
+}
+.header-left { display:flex; align-items:center; gap:16px; position:relative; z-index:1; }
+.header-logo {
+  width:48px; height:48px; border:1px solid var(--goldbr); background:var(--goldlo);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--fd); font-size:1.4rem; color:var(--gold);
+  border-radius:50%;
+}
+.header h1 {
+  font-family:var(--fd); font-size:1.8rem; font-weight:400; color:var(--white);
+  letter-spacing:.08em;
+}
+.header h1 span { color:var(--gold); font-style:italic; }
+.header .sub {
+  font-family:var(--fb); font-size:.78rem; font-weight:300; color:var(--white3);
+  letter-spacing:.08em; margin-top:2px;
+}
+.header-right { position:relative; z-index:1; display:flex; align-items:center; gap:12px; }
+#autoguardado {
+  font-family:var(--fb); font-size:.7rem; font-weight:400;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--gold);
+  opacity:.4; transition:opacity .3s; display:flex; align-items:center; gap:6px;
+}
+#autoguardado .save-dot {
+  width:6px; height:6px; border-radius:50%; background:var(--gold);
+  opacity:0; transition:opacity .3s; flex-shrink:0;
+}
+#autoguardado.saved .save-dot { opacity:1; }
+.btn-save {
+  background:transparent; color:var(--gold); border:1px solid var(--goldbr);
+  padding:7px 16px; font-family:var(--fb); font-size:.72rem; font-weight:500;
+  letter-spacing:.1em; text-transform:uppercase; cursor:pointer; border-radius:6px;
+  transition:all .2s; display:flex; align-items:center; gap:6px;
+}
+.btn-save:hover { background:var(--goldlo); border-color:var(--gold); box-shadow:0 0 16px rgba(201,168,76,.15); }
+.btn-save.saving { opacity:.6; pointer-events:none; }
+.btn-save svg { width:13px; height:13px; flex-shrink:0; }
+
+/* orbs */
+.orb { position:absolute; border-radius:50%; filter:blur(110px); pointer-events:none; z-index:0; }
+.orb-gold { background:radial-gradient(circle, rgba(201,168,76,.22) 0%, transparent 70%); }
+
+/* ── MAIN ── */
+.main { padding:28px 40px; max-width:1440px; margin:0 auto; position:relative; z-index:1; }
+
+/* ── GOLD RULE ── */
+.gold-rule { display:block; height:1px; margin:0 40px; background:linear-gradient(90deg, transparent, var(--gold) 30%, var(--goldhi) 50%, var(--gold) 70%, transparent); opacity:.35; position:relative; z-index:1; }
+
+/* ── VENDEDOR TABS ── */
+.vendedor-tabs {
+  display:flex; gap:0; margin-bottom:28px;
+  border:1px solid var(--border); position:relative; overflow:hidden;
+}
+.vendedor-tabs::before {
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:repeating-linear-gradient(45deg, transparent 0px, transparent 30px, rgba(201,168,76,.02) 30px, rgba(201,168,76,.02) 31px);
+}
+.tab {
+  flex:1; padding:18px 20px; text-align:center; cursor:pointer;
+  background:var(--bg1); color:var(--white3);
+  font-family:var(--fb); font-weight:400; font-size:.85rem;
+  transition:all var(--tx); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  position:relative; z-index:1;
+}
+.tab:last-child { border-right:none; }
+.tab:hover { background:var(--bg2); color:var(--white2); }
+.tab.active { color:var(--white); }
+.tab .tab-name {
+  font-family:var(--fd); font-size:1.15rem; font-weight:400; letter-spacing:.06em;
+}
+.tab .tab-total {
+  font-family:var(--fb); font-size:.72rem; font-weight:300;
+  letter-spacing:.1em; opacity:.6;
+}
+.tab::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+  background:transparent; transition:background var(--tx);
+}
+
+.tab[data-vendedor="Todos"].active {
+  background:linear-gradient(to bottom, rgba(201,168,76,.08), var(--bg1));
+}
+.tab[data-vendedor="Todos"].active::after { background:var(--gold); }
+.tab[data-vendedor="Todos"].active .tab-name { color:var(--gold); }
+
+.tab[data-vendedor="Francisco"].active {
+  background:linear-gradient(to bottom, rgba(93,222,122,.06), var(--bg1));
+}
+.tab[data-vendedor="Francisco"].active::after { background:var(--francisco); }
+.tab[data-vendedor="Francisco"].active .tab-name { color:var(--francisco); }
+
+.tab[data-vendedor="Bofo"].active {
+  background:linear-gradient(to bottom, rgba(109,179,242,.06), var(--bg1));
+}
+.tab[data-vendedor="Bofo"].active::after { background:var(--bofo); }
+.tab[data-vendedor="Bofo"].active .tab-name { color:var(--bofo); }
+
+.tab[data-vendedor="Axel"].active {
+  background:linear-gradient(to bottom, rgba(176,124,242,.06), var(--bg1));
+}
+.tab[data-vendedor="Axel"].active::after { background:var(--axel); }
+.tab[data-vendedor="Axel"].active .tab-name { color:var(--axel); }
+
+/* ── CONTROLS ── */
+.controls {
+  display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; align-items:center;
+}
+.btn {
+  padding:10px 22px; border:none; cursor:pointer;
+  font-family:var(--fb); font-weight:500; font-size:.8rem;
+  letter-spacing:.08em; text-transform:uppercase;
+  transition:all var(--tx); display:flex; align-items:center; gap:6px;
+  border-radius:var(--r-sm);
+}
+.btn-add {
+  background:var(--gold); color:#09090e;
+  position:relative; overflow:hidden;
+}
+.btn-add::after {
+  content:''; position:absolute; top:0; left:-120%; width:60%; height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
+  transform:skewX(-18deg); animation:shimmer 3.2s ease-in-out infinite;
+}
+@keyframes shimmer { 0%{left:-120%} 45%,100%{left:160%} }
+.btn-add:hover { background:var(--goldhi); box-shadow:0 0 30px rgba(201,168,76,.3); transform:translateY(-1px); }
+
+.btn-csv {
+  background:transparent; color:var(--white3);
+  border:1px solid var(--border);
+}
+.btn-csv:hover { border-color:var(--goldbr); color:var(--gold); }
+
+.btn-reset {
+  background:transparent; color:#663333;
+  border:1px solid rgba(180,60,60,.2); margin-left:auto;
+}
+.btn-reset:hover { border-color:rgba(224,85,85,.4); color:#e05555; }
+
+.filtro {
+  background:var(--bg2); border:1px solid var(--border); color:var(--white2);
+  padding:9px 14px; font-family:var(--fb); font-size:.8rem;
+  letter-spacing:.04em; transition:border-color var(--tx);
+  border-radius:var(--r-sm);
+}
+.filtro:focus { border-color:var(--gold); outline:none; }
+
+/* ── TABLE ── */
+.table-wrap {
+  overflow-x:auto; border:1px solid var(--border); position:relative;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201,168,76,.04) 0%, transparent 60%),
+    var(--bg1);
+  border-radius:var(--r-sm);
+}
+table { width:100%; border-collapse:collapse; font-size:.84rem; min-width:960px; }
+thead th {
+  background:var(--bg2); color:var(--gold); padding:13px 10px; text-align:left;
+  font-family:var(--fb); font-size:.68rem; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase;
+  border-bottom:1px solid var(--goldbr); white-space:nowrap;
+}
+tbody tr {
+  border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background var(--tx);
+}
+tbody tr:hover { background:rgba(201,168,76,.03); }
+tbody td { padding:8px 10px; vertical-align:middle; }
+
+input[type="text"], input[type="number"], input[type="date"], select {
+  background:rgba(255,255,255,.03); border:1px solid var(--border); color:var(--white);
+  padding:7px 9px; width:100%; font-family:var(--fb); font-size:.82rem;
+  transition:border-color var(--tx), background var(--tx);
+  border-radius:5px;
+}
+.inp-vendedor { min-width:100px; }
+.inp-pago { min-width:110px; }
+input:focus, select:focus { outline:none; border-color:var(--gold); background:rgba(201,168,76,.04); }
+select { cursor:pointer; }
+
+.num { text-align:right; }
+.total-cell {
+  text-align:right; color:var(--gold); font-weight:600; font-size:.95rem;
+  font-family:var(--fb); letter-spacing:.02em;
+  text-shadow:0 0 18px rgba(201,168,76,.25);
+}
+
+.btn-del {
+  background:none; border:none; color:var(--white3); cursor:pointer;
+  font-size:.9rem; padding:4px 8px; transition:all var(--tx);
+}
+.btn-del:hover { color:#e05555; text-shadow:0 0 12px rgba(224,85,85,.4); }
+
+tfoot td {
+  padding:14px 10px; border-top:1px solid var(--goldbr); font-weight:600;
+  background:var(--bg2);
+}
+
+/* ── RESUMEN CARDS ── */
+.resumen {
+  display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-top:28px;
+}
+.card {
+  background:var(--bg2); border:1px solid var(--border);
+  padding:18px 20px; position:relative; overflow:hidden;
+  transition:border-color var(--tx), transform var(--tx);
+  border-radius:var(--r);
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(to right, transparent, var(--gold), transparent);
+  opacity:0; transition:opacity var(--tx);
+}
+.card:hover { border-color:var(--goldbr); transform:translateY(-3px); }
+.card:hover::before { opacity:1; }
+.card .label {
+  font-family:var(--fb); font-size:.65rem; font-weight:400;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--white3);
+}
+.card .value {
+  font-family:var(--fd); font-size:1.8rem; font-weight:400; margin-top:8px;
+  letter-spacing:.02em;
+}
+
+/* ── RANKING ── */
+.ranking { margin-top:32px; position:relative; }
+.ranking h3 {
+  font-family:var(--fb); font-size:.7rem; font-weight:400;
+  letter-spacing:.22em; text-transform:uppercase; color:var(--gold);
+  margin-bottom:16px;
+}
+.ranking h3::after {
+  content:''; display:inline-block; width:36px; height:1px;
+  background:var(--gold); margin-left:12px; vertical-align:middle; opacity:.4;
+}
+.ranking-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+.rank-card {
+  background:var(--bg1); border:1px solid var(--border);
+  padding:24px 20px; text-align:center; position:relative;
+  transition:border-color var(--tx), transform var(--tx);
+  border-radius:var(--r);
+}
+.rank-card:hover { transform:translateY(-3px); }
+.rank-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  transition:box-shadow var(--tx);
+}
+.rank-card .rank-name {
+  font-family:var(--fd); font-size:1.3rem; font-weight:400;
+  letter-spacing:.06em; margin-bottom:6px;
+}
+.rank-card .rank-ventas {
+  font-family:var(--fb); font-size:.72rem; font-weight:300;
+  color:var(--white3); letter-spacing:.08em;
+}
+.rank-card .rank-total {
+  font-family:var(--fd); font-size:2rem; font-weight:400;
+  margin-top:6px; letter-spacing:.02em;
+}
+.rank-card .rank-bar {
+  height:2px; border-radius:1px; margin-top:14px;
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+}
+
+/* Francisco */
+.rank-card.francisco { border-top:2px solid var(--francisco); }
+.rank-card.francisco:hover { border-color:var(--francisco); box-shadow:0 0 40px rgba(93,222,122,.08); }
+.rank-card.francisco .rank-name { color:var(--francisco); }
+.rank-card.francisco .rank-total { color:var(--francisco); text-shadow:0 0 20px rgba(93,222,122,.2); }
+.rank-card.francisco .rank-bar { background:linear-gradient(to right, var(--francisco), transparent); }
+
+/* Bofo */
+.rank-card.bofo { border-top:2px solid var(--bofo); }
+.rank-card.bofo:hover { border-color:var(--bofo); box-shadow:0 0 40px rgba(109,179,242,.08); }
+.rank-card.bofo .rank-name { color:var(--bofo); }
+.rank-card.bofo .rank-total { color:var(--bofo); text-shadow:0 0 20px rgba(109,179,242,.2); }
+.rank-card.bofo .rank-bar { background:linear-gradient(to right, var(--bofo), transparent); }
+
+/* Axel */
+.rank-card.axel { border-top:2px solid var(--axel); }
+.rank-card.axel:hover { border-color:var(--axel); box-shadow:0 0 40px rgba(176,124,242,.08); }
+.rank-card.axel .rank-name { color:var(--axel); }
+.rank-card.axel .rank-total { color:var(--axel); text-shadow:0 0 20px rgba(176,124,242,.2); }
+.rank-card.axel .rank-bar { background:linear-gradient(to right, var(--axel), transparent); }
+
+/* ── Stepper ── */
+.stepper { display:inline-flex; align-items:center; background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:6px; overflow:hidden; transition:border-color .15s; }
+.stepper:focus-within { border-color:var(--goldbr); box-shadow:0 0 0 2px rgba(201,168,76,.08); }
+.stepper-btn { background:none; border:none; cursor:pointer; color:var(--white3); width:26px; height:30px; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:300; line-height:1; transition:background .15s, color .15s; flex-shrink:0; user-select:none; }
+.stepper-btn:hover { background:var(--goldlo); color:var(--gold); }
+.stepper-btn:active { background:rgba(201,168,76,.22); }
+.stepper-btn.minus:hover { background:rgba(224,85,85,.1); color:#e05555; }
+.stepper-btn.minus:active { background:rgba(224,85,85,.2); }
+.inp-cant { width:38px; background:transparent; border:none; color:var(--white); font-family:'Outfit',sans-serif; font-size:.84rem; font-weight:600; text-align:center; padding:0; font-variant-numeric:tabular-nums; -moz-appearance:textfield; }
+.inp-cant:focus { outline:none; }
+.inp-cant::-webkit-inner-spin-button, .inp-cant::-webkit-outer-spin-button { -webkit-appearance:none; }
+.stepper-sm .inp-desc { width:34px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:1024px) {
+  .resumen { grid-template-columns:repeat(3, 1fr); }
+}
+@media (max-width:768px) {
+  .header { padding:20px; }
+  .main { padding:20px; }
+  .vendedor-tabs { flex-direction:column; }
+  .ranking-grid { grid-template-columns:1fr; }
+  .resumen { grid-template-columns:repeat(2, 1fr); }
+  .header h1 { font-size:1.4rem; }
+}
+@media (max-width:480px) {
+  .resumen { grid-template-columns:1fr; }
+  .controls { gap:8px; }
+  .btn { font-size:.72rem; padding:8px 14px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ambient orbs -->
+<div class="orb orb-gold" style="width:500px;height:500px;right:-10%;top:-20%;position:fixed;z-index:0;"></div>
+
+<div class="header">
+  <div class="orb orb-gold" style="width:300px;height:300px;right:5%;top:-40%;"></div>
+  <div class="header-left">
+    <div class="header-logo">DS</div>
+    <div>
+      <h1>Doctor <span>Smoke</span> — Ventas</h1>
+      <p class="sub">Registro de ventas por vendedor</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-save" onclick="guardarManual()" title="Guardar ahora">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Guardar
+    </button>
+    <span id="autoguardado"><span class="save-dot"></span>Autoguardado activo</span>
+  </div>
+</div>
+<div class="gold-rule"></div>
+
+<div class="main">
+
+<!-- Tabs de vendedores -->
+<div class="vendedor-tabs">
+  <div class="tab active" data-vendedor="Todos" onclick="cambiarVendedor('Todos')">
+    <div class="tab-name">Todos</div>
+    <div class="tab-total" id="tab-total-Todos">$0</div>
+  </div>
+  <div class="tab" data-vendedor="Francisco" onclick="cambiarVendedor('Francisco')">
+    <div class="tab-name">Francisco</div>
+    <div class="tab-total" id="tab-total-Francisco">$0</div>
+  </div>
+  <div class="tab" data-vendedor="Bofo" onclick="cambiarVendedor('Bofo')">
+    <div class="tab-name">Bofo</div>
+    <div class="tab-total" id="tab-total-Bofo">$0</div>
+  </div>
+  <div class="tab" data-vendedor="Axel" onclick="cambiarVendedor('Axel')">
+    <div class="tab-name">Axel</div>
+    <div class="tab-total" id="tab-total-Axel">$0</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-add" onclick="agregarVenta()">+ Nueva Venta</button>
+  <button class="btn btn-csv" onclick="exportarCSV()">Exportar CSV</button>
+  <select class="filtro" id="filtroPago" onchange="filtrar()">
+    <option value="">Todos los metodos</option>
+    <option value="Efectivo">Efectivo</option>
+    <option value="Tarjeta">Tarjeta</option>
+    <option value="Transferencia">Transferencia</option>
+  </select>
+  <button class="btn btn-reset" onclick="borrarDatosGuardados()">Resetear</button>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Folio</th><th>Fecha</th><th>Vendedor</th><th>Producto</th>
+      <th>Cant.</th><th>Precio Unit.</th><th>Desc. %</th>
+      <th>Total</th><th>Pago</th><th>Notas</th><th></th>
+    </tr>
+  </thead>
+  <tbody id="cuerpo"></tbody>
+  <tfoot>
+    <tr>
+      <td colspan="4" style="color:var(--white3);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;">Totales</td>
+      <td class="num" id="totalCant" style="color:var(--white)">0</td>
+      <td colspan="2"></td>
+      <td class="total-cell" id="totalVentas">$0</td>
+      <td colspan="3"></td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+
+<!-- Resumen -->
+<div class="resumen">
+  <div class="card"><div class="label">Ventas</div><div class="value" style="color:var(--gold)" id="numVentas">0</div></div>
+  <div class="card"><div class="label">Total Vendido</div><div class="value" style="color:var(--gold)" id="totalVendido">$0</div></div>
+  <div class="card"><div class="label">Efectivo</div><div class="value" style="color:var(--francisco)" id="totEfectivo">$0</div></div>
+  <div class="card"><div class="label">Tarjeta</div><div class="value" style="color:var(--bofo)" id="totTarjeta">$0</div></div>
+  <div class="card"><div class="label">Transferencia</div><div class="value" style="color:var(--axel)" id="totTransferencia">$0</div></div>
+</div>
+
+<!-- Ranking vendedores -->
+<div class="ranking">
+  <h3>Ranking de Vendedores</h3>
+  <div class="ranking-grid">
+    <div class="rank-card francisco">
+      <div class="rank-name">Francisco</div>
+      <div class="rank-ventas" id="rank-cnt-Francisco">0 ventas</div>
+      <div class="rank-total" id="rank-tot-Francisco">$0</div>
+      <div class="rank-bar" id="rank-bar-Francisco" style="width:0%"></div>
+    </div>
+    <div class="rank-card bofo">
+      <div class="rank-name">Bofo</div>
+      <div class="rank-ventas" id="rank-cnt-Bofo">0 ventas</div>
+      <div class="rank-total" id="rank-tot-Bofo">$0</div>
+      <div class="rank-bar" id="rank-bar-Bofo" style="width:0%"></div>
+    </div>
+    <div class="rank-card axel">
+      <div class="rank-name">Axel</div>
+      <div class="rank-ventas" id="rank-cnt-Axel">0 ventas</div>
+      <div class="rank-total" id="rank-tot-Axel">$0</div>
+      <div class="rank-bar" id="rank-bar-Axel" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const vendedores = ["Francisco","Bofo","Axel"];
+const pagos = ["Efectivo","Tarjeta","Transferencia"];
+const fmt = n => "$"+Number(n).toLocaleString("es-MX",{minimumFractionDigits:0});
+let vendedorActivo = "Todos";
+
+const ventas = [];
+
+let folioCount = 1;
+
+function escapeHTML(str){
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function calcTotal(precio, cant, desc){
+  return precio * cant * (1 - desc/100);
+}
+
+function crearFila(v){
+  const tr = document.createElement("tr");
+  tr.dataset.vendedor = v.vendedor;
+  const vendOpts = vendedores.map(ve=>`<option ${ve===v.vendedor?"selected":""}>${ve}</option>`).join("");
+  const pagoOpts = pagos.map(p=>`<option ${p===v.pago?"selected":""}>${p}</option>`).join("");
+  tr.innerHTML = `
+    <td><input type="text" class="inp-folio" value="${escapeHTML(v.folio)}" style="width:70px"></td>
+    <td><input type="date" class="inp-fecha" value="${escapeHTML(v.fecha)}"></td>
+    <td><select class="inp-vendedor">${vendOpts}</select></td>
+    <td><input type="text" class="inp-producto" value="${escapeHTML(v.producto)}"></td>
+    <td><div class="stepper"><button type="button" class="stepper-btn minus" onclick="stepCant(this,-1)" tabindex="-1">−</button><input type="number" class="inp-cant" value="${v.cant}" min="1"><button type="button" class="stepper-btn plus" onclick="stepCant(this,+1)" tabindex="-1">+</button></div></td>
+    <td><input type="number" class="inp-precio num" value="${v.precio}" min="0"></td>
+    <td><div class="stepper stepper-sm"><button type="button" class="stepper-btn minus" onclick="stepDesc(this,-5)" tabindex="-1">−</button><input type="number" class="inp-desc" value="${v.desc}" min="0" max="100"><button type="button" class="stepper-btn plus" onclick="stepDesc(this,+5)" tabindex="-1">+</button></div></td>
+    <td class="total-cell td-total"></td>
+    <td><select class="inp-pago">${pagoOpts}</select></td>
+    <td><input type="text" class="inp-notas" value="${escapeHTML(v.notas)}"></td>
+    <td><button class="btn-del" onclick="eliminarFila(this)">&#x2715;</button></td>
+  `;
+  tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", () => {
+    tr.dataset.vendedor = tr.querySelector(".inp-vendedor").value;
+    recalcFila(tr);
+    filtrar();
+  }));
+  return tr;
+}
+
+function stepCant(btn, delta){
+  const tr  = btn.closest("tr");
+  const inp = tr.querySelector(".inp-cant");
+  const val = (parseInt(inp.value) || 1) + delta;
+  inp.value = Math.max(1, val);
+  recalcFila(tr);
+}
+
+function stepDesc(btn, delta){
+  const tr  = btn.closest("tr");
+  const inp = tr.querySelector(".inp-desc");
+  const val = (parseFloat(inp.value) || 0) + delta;
+  inp.value = Math.min(100, Math.max(0, val));
+  recalcFila(tr);
+}
+
+function recalcFila(tr){
+  const precio = parseFloat(tr.querySelector(".inp-precio").value)||0;
+  const cant   = parseInt(tr.querySelector(".inp-cant").value)||0;
+  const desc   = parseFloat(tr.querySelector(".inp-desc").value)||0;
+  tr.querySelector(".td-total").textContent = fmt(calcTotal(precio,cant,desc));
+  actualizarTotales();
+  autoguardar();
+}
+
+// ── Autoguardado ──
+function obtenerDatosTabla(){
+  const filas = [];
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    filas.push({
+      folio: tr.querySelector(".inp-folio").value,
+      fecha: tr.querySelector(".inp-fecha").value,
+      vendedor: tr.querySelector(".inp-vendedor").value,
+      producto: tr.querySelector(".inp-producto").value,
+      cant: parseInt(tr.querySelector(".inp-cant").value)||0,
+      precio: parseFloat(tr.querySelector(".inp-precio").value)||0,
+      desc: parseFloat(tr.querySelector(".inp-desc").value)||0,
+      pago: tr.querySelector(".inp-pago").value,
+      notas: tr.querySelector(".inp-notas").value,
+    });
+  });
+  return filas;
+}
+
+let _autoguardadoTimer = null;
+function autoguardar(){
+  const datos = obtenerDatosTabla();
+  localStorage.setItem("drsmoke_ventas", JSON.stringify(datos));
+  localStorage.setItem("drsmoke_folioCount", folioCount);
+  const ind = document.getElementById("autoguardado");
+  if(!ind) return;
+  ind.classList.add("saved");
+  ind.style.opacity = "1";
+  clearTimeout(_autoguardadoTimer);
+  _autoguardadoTimer = setTimeout(()=>{
+    ind.classList.remove("saved");
+    ind.style.opacity = "0.4";
+  }, 2000);
+}
+
+function guardarManual(){
+  const btn = document.querySelector(".btn-save");
+  if(btn){ btn.classList.add("saving"); btn.textContent = "✓ Guardado"; }
+  autoguardar();
+  setTimeout(()=>{
+    if(btn){
+      btn.classList.remove("saving");
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Guardar`;
+    }
+  }, 1800);
+}
+
+function cargarDatosGuardados(){
+  const guardado = localStorage.getItem("drsmoke_ventas");
+  if(guardado){
+    try {
+      const datos = JSON.parse(guardado);
+      if(datos.length > 0) return datos;
+    } catch(e){}
+  }
+  return null;
+}
+
+function borrarDatosGuardados(){
+  if(confirm("Seguro que quieres borrar todos los datos guardados y volver a los datos iniciales?")){
+    localStorage.removeItem("drsmoke_ventas");
+    localStorage.removeItem("drsmoke_folioCount");
+    location.reload();
+  }
+}
+
+function actualizarTotales(){
+  const todasFilas = [...document.querySelectorAll("#cuerpo tr")];
+  const filasVisibles = todasFilas.filter(tr => tr.style.display !== "none");
+
+  let tv=0, tc=0, ef=0, tar=0, trans=0;
+  filasVisibles.forEach(tr => {
+    const p  = parseFloat(tr.querySelector(".inp-precio").value)||0;
+    const c  = parseInt(tr.querySelector(".inp-cant").value)||0;
+    const d  = parseFloat(tr.querySelector(".inp-desc").value)||0;
+    const pg = tr.querySelector(".inp-pago").value;
+    const t  = calcTotal(p,c,d);
+    tv+=t; tc+=c;
+    if(pg==="Efectivo") ef+=t;
+    else if(pg==="Tarjeta") tar+=t;
+    else trans+=t;
+  });
+
+  document.getElementById("totalCant").textContent = tc;
+  document.getElementById("totalVentas").textContent = fmt(tv);
+  document.getElementById("numVentas").textContent = filasVisibles.length;
+  document.getElementById("totalVendido").textContent = fmt(tv);
+  document.getElementById("totEfectivo").textContent = fmt(ef);
+  document.getElementById("totTarjeta").textContent = fmt(tar);
+  document.getElementById("totTransferencia").textContent = fmt(trans);
+
+  const totales = {Francisco:0, Bofo:0, Axel:0};
+  const conteos = {Francisco:0, Bofo:0, Axel:0};
+  todasFilas.forEach(tr => {
+    const v = tr.dataset.vendedor;
+    if(!totales.hasOwnProperty(v)) return;
+    const p = parseFloat(tr.querySelector(".inp-precio").value)||0;
+    const c = parseInt(tr.querySelector(".inp-cant").value)||0;
+    const d = parseFloat(tr.querySelector(".inp-desc").value)||0;
+    totales[v] += calcTotal(p,c,d);
+    conteos[v]++;
+  });
+
+  const maxTotal = Math.max(totales.Francisco, totales.Bofo, totales.Axel, 1);
+  const totalGeneral = totales.Francisco + totales.Bofo + totales.Axel;
+
+  vendedores.forEach(v => {
+    document.getElementById("rank-tot-"+v).textContent = fmt(totales[v]);
+    document.getElementById("rank-cnt-"+v).textContent = conteos[v] + (conteos[v]===1 ? " venta" : " ventas");
+    document.getElementById("rank-bar-"+v).style.width = (totales[v]/maxTotal*100)+"%";
+    document.getElementById("tab-total-"+v).textContent = fmt(totales[v]);
+  });
+  document.getElementById("tab-total-Todos").textContent = fmt(totalGeneral);
+}
+
+function cambiarVendedor(v){
+  vendedorActivo = v;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelector(`.tab[data-vendedor="${v}"]`).classList.add("active");
+  filtrar();
+}
+
+function filtrar(){
+  const pago = document.getElementById("filtroPago").value;
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    const trVend = tr.dataset.vendedor;
+    const trPago = tr.querySelector(".inp-pago")?.value || "";
+    const matchVend = (vendedorActivo === "Todos" || trVend === vendedorActivo);
+    const matchPago = (!pago || trPago === pago);
+    tr.style.display = (matchVend && matchPago) ? "" : "none";
+  });
+  actualizarTotales();
+}
+
+function renderizar(){
+  const tbody = document.getElementById("cuerpo");
+  tbody.innerHTML = "";
+  const guardado = cargarDatosGuardados();
+  const datosCargar = guardado || ventas;
+  const fc = localStorage.getItem("drsmoke_folioCount");
+  if(fc) folioCount = parseInt(fc);
+  datosCargar.forEach(v => { const tr=crearFila(v); tbody.appendChild(tr); recalcFila(tr); });
+  if(!guardado) autoguardar();
+  filtrar();
+}
+
+function agregarVenta(){
+  const folio = "V-"+String(folioCount++).padStart(3,"0");
+  const vendedor = vendedorActivo !== "Todos" ? vendedorActivo : "Francisco";
+  const nuevo = {folio, fecha:new Date().toISOString().split("T")[0], vendedor, producto:"", cant:1, precio:0, desc:0, pago:"Efectivo", notas:""};
+  const tbody = document.getElementById("cuerpo");
+  const tr = crearFila(nuevo);
+  tbody.appendChild(tr);
+  recalcFila(tr);
+  filtrar();
+  tr.querySelector(".inp-producto").focus();
+}
+
+function eliminarFila(btn){ btn.closest("tr").remove(); actualizarTotales(); autoguardar(); }
+
+function exportarCSV(){
+  let csv = "Folio,Fecha,Vendedor,Producto,Cantidad,Precio Unitario,Descuento %,Total Venta,Metodo de Pago,Notas\n";
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    const fo = tr.querySelector(".inp-folio").value;
+    const fe = tr.querySelector(".inp-fecha").value;
+    const ve = tr.querySelector(".inp-vendedor").value;
+    const pr = tr.querySelector(".inp-producto").value;
+    const cn = tr.querySelector(".inp-cant").value;
+    const pr2= tr.querySelector(".inp-precio").value;
+    const dc = tr.querySelector(".inp-desc").value;
+    const tot= calcTotal(parseFloat(pr2),parseInt(cn),parseFloat(dc)).toFixed(0);
+    const pg = tr.querySelector(".inp-pago").value;
+    const no = tr.querySelector(".inp-notas").value;
+    csv += `"${fo}","${fe}","${ve}","${pr}",${cn},${pr2},${dc},${tot},"${pg}","${no}"\n`;
+  });
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8,\uFEFF"+encodeURIComponent(csv);
+  a.download = "DrSmoke_Ventas.csv";
+  a.click();
+}
+
+renderizar();
+</script>
+</body>
+</html>

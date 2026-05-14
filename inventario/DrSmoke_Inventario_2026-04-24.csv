@@ -1,0 +1,42 @@
+﻿ID,Producto,Marca,Proveedor,Puffs,Costo,Precio Venta,Ganancia Unit.,Margen%,Stock,Minimo,Fecha Entrada,Valor Stock,Estado
+"001","Muha Meds — Venom OG","Muha Meds","Importado",0,485,700,215,30.7%,0,2,2026-04-10,0,AGOTADO
+"002","Muha Meds — Mango Peach Ring","Muha Meds","Importado",0,485,700,215,30.7%,0,2,2026-04-10,0,AGOTADO
+"003","Muha Meds — Rainbow Belts","Muha Meds","Importado",0,485,700,215,30.7%,0,2,2026-04-10,0,AGOTADO
+"004","Lost Vape Orion Bar 7500 — Strawberry Kiwi","Lost Vape","Elfbar MX",7500,70,120,50,41.7%,1,8,2026-04-17,70,BAJO
+"005","Lost Vape Orion Bar 7500 — Sour Apple Ice","Lost Vape","Elfbar MX",7500,70,120,50,41.7%,2,8,2026-04-17,140,BAJO
+"006","Lost Vape Orion Bar 7500 — Ice Cap","Lost Vape","Elfbar MX",7500,70,120,50,41.7%,1,8,2026-04-17,70,BAJO
+"007","Lost Vape Orion Bar 7500 — Peach Mango Watermelon","Lost Vape","Elfbar MX",7500,70,120,50,41.7%,2,8,2026-04-17,140,BAJO
+"008","Lost Mary OS5000 — Berry Cherry","Lost Mary","Elfbar MX",5000,70,120,50,41.7%,4,8,2026-04-17,280,BAJO
+"009","Bugatti Spaceship 7K — Frozen Pineapple","Bugatti","Aroma King MX",7000,120,200,80,40.0%,1,4,2026-04-19,120,BAJO
+"010","Bugatti Spaceship 700S — Tropical Mango","Bugatti","Aroma King MX",7000,120,200,80,40.0%,1,4,2026-04-19,120,BAJO
+"011","Bugatti 7k — Wiki Dragón Berry","Bugatti","Aroma King MX",7000,85,200,115,57.5%,0,4,2026-04-19,0,AGOTADO
+"012","Waka GO 10000 — Mango Lychee","Waka","Dist. Waka MX",10000,160,280,120,42.9%,2,5,2026-04-17,320,BAJO
+"013","Waka GO 10000 — Blueberry Mint","Waka","Dist. Waka MX",10000,160,280,120,42.9%,0,5,2026-04-17,0,AGOTADO
+"014","Waka GO 10000 — Mr Peach","Waka","Dist. Waka MX",10000,160,280,120,42.9%,1,5,2026-04-17,160,BAJO
+"015","Waka GO 10000 — BlackBerry","Waka","Dist. Waka MX",10000,160,280,120,42.9%,0,5,2026-04-17,0,AGOTADO
+"016","Waka GO 10000 — Piña Colada","Waka","Dist. Waka MX",10000,160,280,120,42.9%,1,5,2026-04-17,160,BAJO
+"017","Waka GO 10000 — Peach Blue Raspberry","Waka","Dist. Waka MX",10000,160,280,120,42.9%,0,5,2026-04-17,0,AGOTADO
+"018","Waka SoPro 15K — Cool Mint","Waka","Dist. Waka MX",15000,185,320,135,42.2%,0,5,2026-04-17,0,AGOTADO
+"019","Waka SoPro 15K — Cherry Berry","Waka","Dist. Waka MX",15000,185,320,135,42.2%,3,5,2026-04-17,555,BAJO
+"020","Waka SoPro 15K — Piña Colada","Waka","Dist. Waka MX",15000,185,320,135,42.2%,0,5,2026-04-17,0,AGOTADO
+"021","Waka SoPro 15K — Watermelon Kiwi","Waka","Dist. Waka MX",15000,185,320,135,42.2%,0,5,2026-04-17,0,AGOTADO
+"022","Waka Pro 30K — Blueberry Splash","Waka","Dist. Waka MX",30000,230,380,150,39.5%,1,4,2026-04-17,230,BAJO
+"023","Waka Pro 30K — Strawberry Kiwi","Waka","Dist. Waka MX",30000,230,380,150,39.5%,1,4,2026-04-17,230,BAJO
+"024","Waka soPro Titan 30K — Cherry Watermelón","Waka","Dist. Waka MX",30000,230,380,150,39.5%,0,4,2026-04-17,0,AGOTADO
+"025","Waka Blade 33K — Coco Strawberry","Waka","Dist. Waka MX",33000,235,380,145,38.2%,0,4,2026-04-17,0,AGOTADO
+"026","Waka Blade 33K — Passion Fruit","Waka","Dist. Waka MX",33000,235,380,145,38.2%,1,4,2026-04-17,235,BAJO
+"027","Waka Blade 33K — Blueberry Splash","Waka","Dist. Waka MX",33000,235,380,145,38.2%,1,4,2026-04-17,235,BAJO
+"028","Waka Burst 36K — Pink Lemonade","Waka","Dist. Waka MX",36000,235,380,145,38.2%,0,4,2026-04-17,0,AGOTADO
+"029","Waka Burst 36K — Watermelon Ice","Waka","Dist. Waka MX",36000,235,380,145,38.2%,1,4,2026-04-17,235,BAJO
+"030","Waka Burst 36K — Kiwi Strawberry","Waka","Dist. Waka MX",36000,235,380,145,38.2%,0,4,2026-04-17,0,AGOTADO
+"031","Waka Burst 36K — Strawberry Banana","Waka","Dist. Waka MX",36000,235,380,145,38.2%,0,4,2026-04-17,0,AGOTADO
+"032","Waka Burst 36K — Cherry Bomb","Waka","Dist. Waka MX",36000,235,380,145,38.2%,1,4,2026-04-17,235,BAJO
+"033","Waka Burst 36K — Blueberry Watermelon","Waka","Dist. Waka MX",36000,235,380,145,38.2%,0,4,2026-04-17,0,AGOTADO
+"034","Waka Burst 36K — Strawberry Refresher","Waka","Dist. Waka MX",36000,235,380,145,38.2%,1,4,2026-04-17,235,BAJO
+"035","Waka Icon 50K — Fresh Mint","Waka","Dist. Waka MX",50000,260,450,190,42.2%,1,4,2026-04-17,260,BAJO
+"036","Waka Icon 50K — Cherry Watermelón","Waka","Dist. Waka MX",50000,260,450,190,42.2%,1,4,2026-04-17,260,BAJO
+"037","Waka Icon 50K — Peach Mango Watermelón","Waka","Dist. Waka MX",50000,260,450,190,42.2%,0,4,2026-04-17,0,AGOTADO
+"038","Waka Icon 50K — Kiwi Dragon Berry","Waka","Dist. Waka MX",50000,260,450,190,42.2%,0,4,2026-04-17,0,AGOTADO
+"039","Waka Icon 50K — Watermelon Ice","Waka","Dist. Waka MX",50000,260,450,190,42.2%,0,4,2026-04-17,0,AGOTADO
+"040","Nexa Ultra 40K — Triple Berry","Nexa","Dist. Nexa MX",40000,280,450,170,37.8%,0,4,2026-04-01,0,AGOTADO
+"041","Lost Vape Orion Bar 7500-  Summer Berry Ice","Lost Vape","Elfbar MX",7500,70,120,50,41.7%,2,0,2026-04-24,140,OK

@@ -1,0 +1,4 @@
+ID,Producto,Categoria,Proveedor,Costo Unitario (MXN),Stock Actual,Stock Minimo,Fecha Ultima Entrada,Valor en Stock (MXN),Estado
+001,Vape Desechable 600 puff,Desechable,Proveedor A,80,25,10,2026-04-01,2000,OK
+002,Vape Desechable 2500 puff,Desechable,Proveedor A,130,18,8,2026-04-01,2340,OK
+003,Vape Desechable 5000 puff,Desechable,Proveedor B,200,7,5,2026-03-28,1400,BAJO
