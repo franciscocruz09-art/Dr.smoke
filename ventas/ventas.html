@@ -6,46 +6,60 @@
 <title>Dr. Smoke — Panel de Ventas por Vendedor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+body.ds-loading { visibility: hidden; }
+</style>
+<script>
+setTimeout(function(){ document.body.classList.remove("ds-loading"); }, 800);
+</script>
 <style>
 :root {
   /* surfaces */
-  --bg:        #070709;
-  --bg-elev-1: #0A0A0F;
-  --bg-elev-2: #0F0F14;
-  --bg-elev-3: #13131A;
-  --bg-row-a:  #0F0F14;
-  --bg-row-b:  #0C0C11;
+  --bg:        #0e0c0a;
+  --bg-elev-1: #131109;
+  --bg-elev-2: #1a1712;
+  --bg-elev-3: #231f18;
+  --bg-row-a:  #1a1712;
+  --bg-row-b:  #131109;
 
   /* gold + amber */
-  --gold:      #C9A84C;
-  --gold-hi:   #E2C26A;
-  --gold-lo:   rgba(201,168,76,.10);
-  --gold-br:   rgba(201,168,76,.30);
-  --gold-soft: rgba(201,168,76,.04);
-  --amber:     #E8872A;
+  --gold:      #cc9166;
+  --gold-hi:   #ffd89c;
+  --gold-lo:   rgba(204,145,102,.10);
+  --gold-br:   rgba(204,145,102,.30);
+  --gold-soft: rgba(204,145,102,.04);
+  --amber:     #ae9357;
+
+  /* teal */
+  --teal:      #009B8D;
+  --teal-hi:   #00C9B7;
+  --teal-lo:   rgba(0,155,141,.12);
+  --teal-br:   rgba(0,155,141,.35);
+  --teal-soft: rgba(0,155,141,.07);
 
   /* text */
-  --text:      #F0EAD6;
-  --text-2:    #A09AA0;
-  --text-3:    #6B6570;
-  --text-4:    #3D3940;
+  --text:      #ffffff;
+  --text-2:    #e2e3e9;
+  --text-3:    #acafb9;
+  --text-4:    #5e616e;
 
   /* states */
   --green:     #4ADE80;
   --green-soft:rgba(74,222,128,.12);
   --blue:      #60A5FA;
   --blue-soft: rgba(96,165,250,.12);
-  --violet:    #A78BFA;
-  --violet-soft:rgba(167,139,250,.12);
+  --violet:    #cdcdcd;
+  --violet-soft:rgba(205,205,205,.10);
   --danger:    #E0625C;
 
-  --border:    rgba(255,255,255,.05);
-  --border-2:  rgba(255,255,255,.09);
+  --border:    rgba(204,145,102,.09);
+  --border-2:  rgba(204,145,102,.16);
 
   /* type */
-  --f-display: 'Cormorant Garamond', Georgia, serif;
-  --f-ui:      'DM Sans', -apple-system, system-ui, sans-serif;
+  --f-display: 'Playfair Display', 'Georgia', serif;
+  --f-ui:      'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --f-mono:    'JetBrains Mono', ui-monospace, monospace;
 
   --tx: .2s cubic-bezier(.4,0,.2,1);
@@ -65,11 +79,18 @@
   --bg-row-b:  #F7F5F0;
 
   --gold:      #996B10;
-  --gold-hi:   #C9A84C;
+  --gold-hi:   #cc9166;
   --gold-lo:   rgba(153,107,16,.12);
   --gold-br:   rgba(153,107,16,.35);
   --gold-soft: rgba(153,107,16,.07);
   --amber:     #B85C10;
+
+  /* teal */
+  --teal:      #007A6E;
+  --teal-hi:   #009B8D;
+  --teal-lo:   rgba(0,122,110,.12);
+  --teal-br:   rgba(0,122,110,.30);
+  --teal-soft: rgba(0,122,110,.06);
 
   --text:      #18140C;
   --text-2:    #4A4030;
@@ -139,6 +160,7 @@
 }
 /* inputs y selects */
 [data-theme="light"] .btn-ghost { background: rgba(240,236,228,.8); }
+[data-theme="light"] .btn-ghost:hover { background: var(--teal-lo); border-color: var(--teal-br); color: var(--teal); }
 [data-theme="light"] .filtro    { background: rgba(240,236,228,.8); }
 [data-theme="light"] input,
 [data-theme="light"] select,
@@ -201,6 +223,700 @@
 [data-theme="light"] ::-webkit-scrollbar-track { background: #EEE9DF; }
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(153,107,16,.3); }
 
+/* ────────────────────────────────────────
+   VISTA VENTAS — NUEVO ESQUELETO ERP
+──────────────────────────────────────── */
+
+/* Header de vista */
+.vv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.vv-title {
+  font-family: var(--f-ui);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.01em;
+}
+.vv-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vv-download-btn {
+  background: transparent;
+  color: var(--text-2);
+  border-color: var(--border-2);
+  font-size: .75rem;
+  padding: 8px 14px;
+}
+.vv-download-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold-br);
+  background: var(--gold-soft);
+}
+.vv-crear-btn {
+  font-size: .78rem;
+  padding: 8px 16px;
+  gap: 6px;
+}
+.vv-chevron { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* Barra búsqueda */
+.vv-searchbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.vv-search-input-wrap {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.vv-search-icon {
+  position: absolute;
+  left: 14px;
+  width: 15px; height: 15px;
+  color: var(--text-4);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.vv-search-input {
+  width: 100%;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--f-ui);
+  font-size: .83rem;
+  padding: 10px 14px 10px 40px;
+  transition: all var(--tx);
+}
+.vv-search-input::placeholder { color: var(--text-4); }
+.vv-search-input:focus {
+  outline: none;
+  border-color: var(--gold-br);
+  background: var(--bg-elev-3);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.vv-filter-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.vv-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  font-family: var(--f-ui);
+  font-size: .75rem;
+  font-weight: 500;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: all var(--tx);
+  white-space: nowrap;
+}
+.vv-filter-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.vv-chevron-sm { width: 12px; height: 12px; }
+.vv-filter-btn:hover {
+  color: var(--teal);
+  border-color: var(--teal-br);
+  background: var(--teal-soft);
+}
+.vv-filter-btn.active {
+  color: var(--teal);
+  border-color: var(--teal-br);
+  background: var(--teal-lo);
+}
+
+/* Tabla ERP */
+.vv-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  border-radius: var(--r);
+  position: relative;
+  margin-bottom: 32px;
+}
+.vv-table-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-br), transparent);
+  z-index: 1;
+}
+.vv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+  min-width: 1100px;
+}
+.vv-th {
+  background: var(--bg-elev-1);
+  color: var(--text-3);
+  padding: 13px 14px;
+  text-align: left;
+  font-family: var(--f-ui);
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(204,145,102,.15);
+  white-space: nowrap;
+  user-select: none;
+}
+.vv-th-check { width: 44px; text-align: center; padding: 13px 0; }
+.vv-th-num { text-align: right; }
+
+/* Checkbox custom */
+.vv-check {
+  width: 15px; height: 15px;
+  accent-color: var(--teal);
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+/* Filas */
+.vv-table tbody tr {
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--tx), box-shadow var(--tx);
+  position: relative;
+  cursor: pointer;
+}
+.vv-table tbody tr:nth-child(odd)  { background: var(--bg-row-a); }
+.vv-table tbody tr:nth-child(even) { background: var(--bg-row-b); }
+.vv-table tbody tr:last-child { border-bottom: none; }
+.vv-table tbody tr:hover {
+  background: rgba(204,145,102,.06) !important;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+/* Celdas */
+.vv-table tbody td {
+  padding: 0 14px;
+  font-family: var(--f-ui);
+  font-size: .82rem;
+  color: var(--text-2);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.vv-table tbody td.vv-td-check {
+  text-align: center;
+  padding: 0;
+  width: 44px;
+}
+.vv-table tbody td.vv-td-num {
+  text-align: right;
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Folio link */
+.vv-folio-link {
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: none;
+  font-family: var(--f-mono);
+  transition: color var(--tx);
+}
+.vv-folio-link:hover { color: var(--teal-hi); text-decoration: underline; }
+
+/* Badges de estado */
+.vv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--f-ui);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.vv-badge-pagada   { background: var(--green-soft); color: var(--green); }
+.vv-badge-pendiente{ background: rgba(232,135,42,.12); color: var(--amber); }
+.vv-badge-entregado{ background: var(--green-soft); color: var(--green); }
+.vv-badge-pendiente-prod { background: rgba(96,165,250,.12); color: var(--blue); }
+.vv-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Total en tabla */
+.vv-total-cell {
+  color: var(--gold);
+  font-weight: 600;
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Canal / Cajero */
+.vv-canal { color: var(--teal); font-weight: 500; }
+
+/* Botón borrar por fila */
+.vv-th-del { width: 44px; padding: 13px 8px; }
+.vv-td-del {
+  width: 44px;
+  padding: 0 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+.vv-btn-del {
+  opacity: 0;
+  transform: scale(.85);
+  transition: opacity var(--tx), transform var(--tx), color var(--tx), background var(--tx), border-color var(--tx);
+}
+.vv-table tbody tr:hover .vv-btn-del {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Estado vacío */
+.vv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  gap: 16px;
+  color: var(--text-4);
+}
+.vv-empty svg { width: 40px; height: 40px; opacity: .4; }
+.vv-empty p {
+  font-family: var(--f-ui);
+  font-size: .9rem;
+  color: var(--text-3);
+}
+
+/* Tema claro — ajustes vista ventas */
+[data-theme="light"] .vv-search-input {
+  background: #FFFFFF !important;
+  border-color: var(--border-2) !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .vv-search-input:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px var(--gold-lo) !important;
+}
+[data-theme="light"] .vv-filter-btn {
+  background: rgba(240,236,228,.8);
+}
+[data-theme="light"] .vv-filter-btn:hover {
+  background: var(--teal-lo);
+}
+[data-theme="light"] .vv-download-btn {
+  background: rgba(240,236,228,.8);
+}
+[data-theme="light"] .vv-table-wrap {
+  background: #FFFFFF;
+}
+[data-theme="light"] .vv-table tbody tr:nth-child(odd)  { background: var(--bg-row-a); }
+[data-theme="light"] .vv-table tbody tr:nth-child(even) { background: var(--bg-row-b); }
+[data-theme="light"] .vv-table tbody tr:hover { background: rgba(153,107,16,.05) !important; }
+
+/* ── SORT DROPDOWN ── */
+.vv-sort-wrap {
+  position: relative;
+}
+.vv-sort-chevron {
+  transition: transform var(--tx);
+}
+.vv-sort-wrap.open .vv-sort-chevron {
+  transform: rotate(180deg);
+}
+.vv-sort-wrap.open #vvSortBtn {
+  color: var(--teal);
+  border-color: var(--teal-br);
+  background: var(--teal-lo);
+}
+.vv-sort-dd {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 120;
+  min-width: 240px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r);
+  box-shadow: 0 12px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(204,145,102,.06);
+  overflow: hidden;
+  list-style: none;
+  padding: 6px 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(.98);
+  transition: opacity .18s, transform .18s cubic-bezier(.4,0,.2,1);
+}
+.vv-sort-wrap.open .vv-sort-dd {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+.vv-sort-opt {
+  position: relative;
+  padding: 9px 38px 9px 14px;
+  font-family: var(--f-ui);
+  font-size: .8rem;
+  font-weight: 400;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--tx), color var(--tx);
+  user-select: none;
+}
+.vv-sort-opt:hover {
+  background: rgba(204,145,102,.06);
+  color: var(--text);
+}
+.vv-sort-opt.selected {
+  font-weight: 600;
+  color: var(--teal-hi);
+  background: var(--teal-soft);
+}
+.vv-sort-opt.selected::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px; height: 14px;
+  background: var(--teal);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+}
+
+[data-theme="light"] .vv-sort-dd {
+  background: #FFFFFF;
+  box-shadow: 0 8px 28px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06);
+}
+[data-theme="light"] .vv-sort-opt:hover { background: rgba(153,107,16,.05); }
+[data-theme="light"] .vv-sort-opt.selected { background: var(--teal-lo); }
+
+/* ── SORT MODAL OVERRIDES ── */
+.sm-panel { max-width: 420px; }
+.sm-body  { padding: 10px; }
+.sm-card  { padding: 4px 0; }
+.sm-btn-apply { flex: 1; }
+.fm-label-mb  { margin-bottom: 10px; }
+
+/* ── SORT MODAL LIST ── */
+.sm-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sm-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  font-family: var(--f-ui);
+  font-size: .85rem;
+  font-weight: 400;
+  color: var(--text-2);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: background var(--tx), color var(--tx);
+  user-select: none;
+}
+.sm-opt:hover {
+  background: rgba(204,145,102,.06);
+  color: var(--text);
+}
+.sm-opt.selected {
+  font-weight: 600;
+  color: var(--teal-hi);
+  background: var(--teal-soft);
+}
+.sm-check {
+  width: 18px; height: 18px;
+  color: var(--teal);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.sm-opt.selected .sm-check { opacity: 1; }
+
+[data-theme="light"] .sm-opt:hover { background: rgba(153,107,16,.05); }
+[data-theme="light"] .sm-opt.selected { background: var(--teal-lo); }
+
+/* ── FILTRO COUNT BADGE ── */
+.vv-filter-count {
+  background: var(--teal);
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+  margin-left: 2px;
+  line-height: 1.6;
+}
+
+/* ────────────────────────────────────────
+   MODAL FILTROS
+──────────────────────────────────────── */
+.fm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.fm-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (min-width: 640px) {
+  .fm-overlay { align-items: center; }
+}
+
+.fm-panel {
+  position: relative;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--gold-br);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(40px);
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 -20px 60px rgba(0,0,0,.5);
+}
+@media (min-width: 640px) {
+  .fm-panel {
+    border-radius: 16px;
+    transform: scale(.96);
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  }
+}
+.fm-overlay.open .fm-panel {
+  transform: translateY(0) scale(1);
+}
+.fm-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 24px; right: 24px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  border-radius: 999px;
+}
+
+/* Header */
+.fm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.fm-title {
+  font-family: var(--f-display);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -.005em;
+}
+.fm-close {
+  background: transparent;
+  border: 1px solid var(--border-2);
+  color: var(--text-3);
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--tx);
+}
+.fm-close svg { width: 16px; height: 16px; }
+.fm-close:hover { color: var(--text); border-color: var(--gold-br); }
+
+/* Body */
+.fm-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-elev-1);
+}
+.fm-body::-webkit-scrollbar { width: 4px; }
+.fm-body::-webkit-scrollbar-track { background: transparent; }
+.fm-body::-webkit-scrollbar-thumb { background: var(--gold-br); border-radius: 2px; }
+
+/* Card */
+.fm-card {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+}
+
+/* Label con icono */
+.fm-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-ui);
+  font-size: .83rem;
+  font-weight: 500;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.fm-label svg { width: 16px; height: 16px; color: var(--text-4); flex-shrink: 0; }
+
+/* Row select */
+.fm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.fm-select {
+  flex: 1;
+  min-width: 180px;
+  max-width: 260px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--f-ui);
+  font-size: .8rem;
+  padding: 8px 32px 8px 12px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235e616e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  transition: all var(--tx);
+}
+.fm-select:focus {
+  outline: none;
+  border-color: var(--gold-br);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.fm-select option { background: var(--bg-elev-2); }
+
+/* Pills */
+.fm-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-left: 24px;
+}
+.fm-pill {
+  font-family: var(--f-ui);
+  font-size: .78rem;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--bg-elev-1);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all var(--tx);
+  white-space: nowrap;
+}
+.fm-pill:hover {
+  border-color: var(--gold-br);
+  color: var(--gold);
+  background: var(--gold-soft);
+}
+.fm-pill.active {
+  background: var(--teal-lo);
+  border-color: var(--teal-br);
+  color: var(--teal-hi);
+  box-shadow: 0 0 0 1px var(--teal-br);
+}
+
+/* Footer */
+.fm-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  border-radius: 0 0 16px 16px;
+  flex-shrink: 0;
+}
+.fm-btn-clear {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--f-ui);
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--tx);
+}
+.fm-btn-clear svg { width: 14px; height: 14px; }
+.fm-btn-clear:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(224,98,92,.07);
+}
+.fm-btn-apply {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-hi) 100%);
+  color: #fff;
+  font-family: var(--f-ui);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--tx);
+  box-shadow: 0 4px 14px rgba(0,155,141,.22);
+}
+.fm-btn-apply:hover {
+  box-shadow: 0 6px 20px rgba(0,155,141,.35);
+  transform: translateY(-1px);
+}
+
+/* Tema claro */
+[data-theme="light"] .fm-panel { background: #FDFCF9; border-color: var(--border-2); }
+[data-theme="light"] .fm-body  { background: var(--bg-elev-3); }
+[data-theme="light"] .fm-card  { background: #FFFFFF; border-color: var(--border); }
+[data-theme="light"] .fm-select { background: #FFFFFF; }
+[data-theme="light"] .fm-pill  { background: rgba(240,236,228,.8); }
+[data-theme="light"] .fm-btn-clear { background: rgba(240,236,228,.8); }
+[data-theme="light"] .fm-footer { background: #FDFCF9; }
+
 /* ── BOTÓN TEMA ── */
 .btn-theme {
   display: inline-flex; align-items: center; gap: 6px;
@@ -253,8 +969,8 @@ body {
   display: flex;
   flex-direction: column;
   background:
-    linear-gradient(180deg, rgba(13, 17, 24, .98) 0%, rgba(17, 23, 33, .98) 100%);
-  border-right: 1px solid rgba(201,168,76,.12);
+    linear-gradient(180deg, rgba(20, 15, 8, .98) 0%, rgba(30, 22, 12, .98) 100%);
+  border-right: 1px solid rgba(204,145,102,.12);
   box-shadow: 24px 0 50px rgba(0,0,0,.25);
   overflow: hidden;
 }
@@ -264,7 +980,7 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top left, rgba(201,168,76,.14), transparent 30%),
+    radial-gradient(circle at top left, rgba(204,145,102,.14), transparent 30%),
     radial-gradient(circle at bottom right, rgba(96,165,250,.08), transparent 28%);
   pointer-events: none;
 }
@@ -298,7 +1014,7 @@ body {
   font-family: var(--f-display);
   font-size: 1.4rem;
   font-weight: 700;
-  box-shadow: 0 12px 28px rgba(201,168,76,.22);
+  box-shadow: 0 12px 28px rgba(204,145,102,.22);
 }
 
 .side-brand-copy {
@@ -339,8 +1055,8 @@ body {
 
 .side-cta:hover {
   transform: translateY(-1px);
-  background: rgba(201,168,76,.12);
-  border-color: rgba(201,168,76,.28);
+  background: rgba(204,145,102,.12);
+  border-color: rgba(204,145,102,.28);
 }
 
 .side-cta-badge {
@@ -374,7 +1090,7 @@ body {
   display: grid;
   place-items: center;
   border: 4px solid rgba(255,255,255,.08);
-  border-top-color: #12c7d9;
+  border-top-color: var(--teal-hi);
   color: #ecf7f8;
   font-weight: 700;
   font-size: 1rem;
@@ -417,7 +1133,7 @@ body {
 }
 
 .side-link:hover {
-  background: rgba(255,255,255,.05);
+  background: rgba(204,145,102,.09);
   color: var(--text);
   transform: translateX(2px);
 }
@@ -430,7 +1146,7 @@ body {
 }
 
 .side-link.active {
-  background: linear-gradient(90deg, rgba(201,168,76,.18), rgba(201,168,76,.05));
+  background: linear-gradient(90deg, rgba(204,145,102,.18), rgba(204,145,102,.05));
   color: #fff;
   box-shadow: inset 3px 0 0 var(--gold);
 }
@@ -501,7 +1217,7 @@ body::before {
   position: fixed; inset: 0;
   background:
     radial-gradient(ellipse 70% 50% at 90% 0%, rgba(232,135,42,.05) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 0% 30%, rgba(201,168,76,.04) 0%, transparent 55%);
+    radial-gradient(ellipse 60% 40% at 0% 30%, rgba(204,145,102,.04) 0%, transparent 55%);
   pointer-events: none; z-index: 0;
 }
 
@@ -524,7 +1240,7 @@ body::after {
   background: rgba(7,7,9,.78);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(201,168,76,.15);
+  border-bottom: 1px solid rgba(204,145,102,.15);
   padding: 0 32px;
   display: flex; align-items: center;
 }
@@ -540,8 +1256,8 @@ body::after {
   overflow: hidden;
   flex-shrink: 0;
   box-shadow:
-    0 0 0 1px rgba(201,168,76,.4),
-    0 4px 16px rgba(201,168,76,.18);
+    0 0 0 1px rgba(204,145,102,.4),
+    0 4px 16px rgba(204,145,102,.18);
 }
 .brand-mark img {
   width: 100%; height: 100%;
@@ -583,14 +1299,14 @@ body::after {
   box-shadow: 0 0 8px rgba(74,222,128,.6);
   animation: pulse 2s ease-in-out infinite;
 }
-.save-status.saving .dot { background: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,.6); }
+.save-status.saving .dot { background: var(--gold); box-shadow: 0 0 8px rgba(204,145,102,.6); }
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .35; transform: scale(.85); }
 }
 .btn-save {
   display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(201,168,76,.06);
+  background: rgba(204,145,102,.06);
   color: var(--gold);
   border: 1px solid var(--gold-br);
   padding: 7px 14px;
@@ -604,7 +1320,7 @@ body::after {
 .btn-save:hover {
   background: var(--gold-lo);
   border-color: var(--gold);
-  box-shadow: 0 0 16px rgba(201,168,76,.18);
+  box-shadow: 0 0 16px rgba(204,145,102,.18);
 }
 .btn-save svg { width: 13px; height: 13px; }
 
@@ -774,11 +1490,11 @@ body::after {
   overflow: hidden;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
-  color: #1a1408;
-  border-color: var(--gold);
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-hi) 100%);
+  color: #ffffff;
+  border-color: var(--teal);
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(201,168,76,.18);
+  box-shadow: 0 4px 14px rgba(0,155,141,.22);
 }
 .btn-primary::before {
   content: ''; position: absolute;
@@ -789,7 +1505,7 @@ body::after {
 }
 .btn-primary:hover::before { left: 160%; }
 .btn-primary:hover {
-  box-shadow: 0 6px 24px rgba(201,168,76,.32), 0 0 32px rgba(232,135,42,.15);
+  box-shadow: 0 6px 24px rgba(0,155,141,.35), 0 0 32px rgba(0,201,183,.18);
   transform: translateY(-1px);
 }
 .btn-primary svg { width: 14px; height: 14px; }
@@ -863,7 +1579,7 @@ thead th {
   font-family: var(--f-ui);
   font-size: .62rem; font-weight: 600;
   letter-spacing: .18em; text-transform: uppercase;
-  border-bottom: 1px solid rgba(201,168,76,.15);
+  border-bottom: 1px solid rgba(204,145,102,.15);
   white-space: nowrap;
 }
 thead th.num { text-align: right; }
@@ -878,7 +1594,7 @@ tbody tr:nth-child(odd)  { background: var(--bg-row-a); }
 tbody tr:nth-child(even) { background: var(--bg-row-b); }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover {
-  background: rgba(201,168,76,.07) !important;
+  background: rgba(204,145,102,.07) !important;
   box-shadow: inset 3px 0 0 var(--gold), 0 2px 12px rgba(0,0,0,.18);
   z-index: 1;
 }
@@ -913,7 +1629,7 @@ td.td-total {
   transition: color var(--tx), text-shadow var(--tx);
 }
 tbody tr:hover td.td-total {
-  text-shadow: 0 0 18px rgba(201,168,76,.35);
+  text-shadow: 0 0 18px rgba(204,145,102,.35);
 }
 
 /* btn-del oculto por defecto, aparece en hover */
@@ -953,7 +1669,7 @@ select.cell-select { cursor: pointer; }
   font-family: var(--f-mono);
   font-size: .76rem;
   font-weight: 500;
-  color: rgba(201,168,76,.7) !important;
+  color: rgba(204,145,102,.7) !important;
   letter-spacing: .04em;
 }
 .inp-fecha {
@@ -986,10 +1702,10 @@ select.cell-select { cursor: pointer; }
   color: var(--text);
 }
 .fecha-trigger[aria-expanded="true"] {
-  background: rgba(201,168,76,.05);
+  background: rgba(204,145,102,.05);
   border-color: var(--gold-br);
   color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201,168,76,.06);
+  box-shadow: 0 0 0 3px rgba(204,145,102,.06);
 }
 .fecha-trigger svg.fecha-ico {
   width: 13px; height: 13px;
@@ -1099,7 +1815,7 @@ select.cell-select { cursor: pointer; }
   position: relative;
 }
 .cal-cell.out { color: var(--text-4); opacity: .35; }
-.cal-cell:hover { background: rgba(255,255,255,.05); color: var(--text); }
+.cal-cell:hover { background: rgba(204,145,102,.09); color: var(--text); }
 .cal-cell.today {
   color: var(--gold);
   font-weight: 600;
@@ -1115,7 +1831,7 @@ select.cell-select { cursor: pointer; }
   color: #0a0a0e;
   font-weight: 700;
   border-color: var(--gold);
-  box-shadow: 0 0 0 2px rgba(201,168,76,.18), 0 0 16px rgba(201,168,76,.3);
+  box-shadow: 0 0 0 2px rgba(204,145,102,.18), 0 0 16px rgba(204,145,102,.3);
 }
 .cal-cell.selected.today::after { background: #0a0a0e; }
 
@@ -1123,7 +1839,7 @@ select.cell-select { cursor: pointer; }
   display: flex; gap: 6px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,.05);
+  border-top: 1px solid rgba(204,145,102,.09);
 }
 .cal-quick {
   flex: 1;
@@ -1132,7 +1848,7 @@ select.cell-select { cursor: pointer; }
   letter-spacing: .1em; text-transform: uppercase;
   color: var(--text-3);
   background: rgba(255,255,255,.025);
-  border: 1px solid rgba(255,255,255,.05);
+  border: 1px solid rgba(204,145,102,.09);
   padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
@@ -1157,9 +1873,9 @@ select.cell-select { cursor: pointer; }
   border-color: rgba(255,255,255,.06);
 }
 .precio-cell:focus-within {
-  background: rgba(201,168,76,.04);
+  background: rgba(204,145,102,.04);
   border-color: var(--gold-br);
-  box-shadow: 0 0 0 3px rgba(201,168,76,.06);
+  box-shadow: 0 0 0 3px rgba(204,145,102,.06);
 }
 .precio-cell .currency {
   font-family: var(--f-mono);
@@ -1529,7 +2245,7 @@ input.hidden-select:focus {
 
 tfoot td {
   padding: 16px 14px;
-  border-top: 1px solid rgba(201,168,76,.20);
+  border-top: 1px solid rgba(204,145,102,.20);
   background: var(--bg-elev-1);
   font-variant-numeric: tabular-nums;
 }
@@ -1553,7 +2269,7 @@ tfoot td {
   font-weight: 600;
   color: var(--gold);
   letter-spacing: -.01em;
-  text-shadow: 0 0 24px rgba(201,168,76,.25);
+  text-shadow: 0 0 24px rgba(204,145,102,.25);
 }
 
 /* empty state */
@@ -1592,7 +2308,7 @@ tfoot td {
 }
 .kpi {
   --kpi-color: var(--gold);
-  --kpi-glow: rgba(201,168,76,.15);
+  --kpi-glow: rgba(204,145,102,.15);
   background:
     radial-gradient(120% 80% at 100% 0%, var(--kpi-glow) 0%, transparent 55%),
     linear-gradient(180deg, rgba(255,255,255,.018), transparent 50%),
@@ -1736,8 +2452,8 @@ tfoot td {
 
 .kpi.is-ventas { --kpi-color: var(--amber); --kpi-glow: rgba(232,135,42,.10); }
 .kpi.is-ventas .kpi-value { color: var(--text); }
-.kpi.is-total  { --kpi-color: var(--gold); --kpi-glow: rgba(201,168,76,.12); }
-.kpi.is-total  .kpi-value { color: var(--gold); text-shadow: 0 0 30px rgba(201,168,76,.18); }
+.kpi.is-total  { --kpi-color: var(--gold); --kpi-glow: rgba(204,145,102,.12); }
+.kpi.is-total  .kpi-value { color: var(--gold); text-shadow: 0 0 30px rgba(204,145,102,.18); }
 .kpi.is-cash   { --kpi-color: var(--green); --kpi-glow: rgba(74,222,128,.10); }
 .kpi.is-cash   .kpi-value { color: var(--green); }
 .kpi.is-card   { --kpi-color: var(--blue); --kpi-glow: rgba(96,165,250,.10); }
@@ -1842,7 +2558,7 @@ tfoot td {
 
 .rank-card.first {
   border-color: var(--gold-br);
-  box-shadow: 0 0 40px rgba(201,168,76,.08), inset 0 1px 0 rgba(201,168,76,.1);
+  box-shadow: 0 0 40px rgba(204,145,102,.08), inset 0 1px 0 rgba(204,145,102,.1);
 }
 .rank-card.first::before {
   content: ''; position: absolute;
@@ -1854,7 +2570,7 @@ tfoot td {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 30px rgba(201,168,76,.3);
+  text-shadow: 0 0 30px rgba(204,145,102,.3);
 }
 .rank-card.second .rank-position { color: var(--gold); opacity: .65; }
 .rank-card.third .rank-position { color: var(--text-3); }
@@ -1893,7 +2609,7 @@ tfoot td {
   position: relative;
   transform: scale(.96);
   transition: transform .25s cubic-bezier(.4,0,.2,1);
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(201,168,76,.05);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(204,145,102,.05);
   max-height: calc(100vh - 40px);
   display: flex; flex-direction: column;
 }
@@ -2085,7 +2801,7 @@ input[type="range"].slider::-webkit-slider-thumb {
   border-radius: 50%;
   margin-top: -6px;
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(201,168,76,.2);
+  box-shadow: 0 0 0 3px rgba(204,145,102,.2);
   transition: transform .15s;
 }
 input[type="range"].slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
@@ -2100,7 +2816,7 @@ input[type="range"].slider::-moz-range-thumb {
 /* total preview */
 .total-preview {
   display: flex; justify-content: space-between; align-items: center;
-  background: linear-gradient(135deg, rgba(201,168,76,.06), rgba(74,222,128,.04));
+  background: linear-gradient(135deg, rgba(204,145,102,.06), rgba(74,222,128,.04));
   border: 1px solid var(--gold-br);
   border-radius: var(--r);
   padding: 16px 20px;
@@ -2238,7 +2954,7 @@ textarea.field-input {
   border-radius: var(--r-sm); cursor: pointer; transition: all var(--tx);
   display: inline-flex; align-items: center; gap: 6px;
 }
-.btn-new-corte:hover { background: rgba(201,168,76,.18); }
+.btn-new-corte:hover { background: rgba(204,145,102,.18); }
 .btn-del-corte {
   padding: 9px 14px;
   background: transparent; border: 1px solid rgba(224,98,92,.2);
@@ -2295,20 +3011,20 @@ textarea.field-input {
   background: var(--bg-elev-1); color: var(--text-3);
   padding: 12px 14px; text-align: left;
   font-size: .6rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
-  border-bottom: 1px solid rgba(201,168,76,.15); white-space: nowrap;
+  border-bottom: 1px solid rgba(204,145,102,.15); white-space: nowrap;
 }
 .corte-tbl thead th.num { text-align: right; }
 .corte-tbl tbody tr {
   border-bottom: 1px solid var(--border); transition: background var(--tx);
 }
 .corte-tbl tbody tr:last-child { border-bottom: none; }
-.corte-tbl tbody tr:hover { background: rgba(201,168,76,.04); }
+.corte-tbl tbody tr:hover { background: rgba(204,145,102,.04); }
 .corte-tbl tbody td { padding: 10px 14px; }
 .corte-tbl tbody td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--f-mono); font-size: .8rem; }
 .corte-tbl tbody td.gold { color: var(--gold); font-weight: 600; }
 .corte-tbl tfoot td {
   padding: 14px 14px;
-  border-top: 1px solid rgba(201,168,76,.2);
+  border-top: 1px solid rgba(204,145,102,.2);
   background: var(--bg-elev-1);
   font-variant-numeric: tabular-nums;
 }
@@ -2373,7 +3089,7 @@ textarea.field-input {
   flex-wrap: wrap; gap: 12px;
   padding: 14px 18px;
   background: var(--bg-elev-1);
-  border-bottom: 1px solid rgba(201,168,76,.12);
+  border-bottom: 1px solid rgba(204,145,102,.12);
 }
 .dia-fecha-wrap {
   display: flex; align-items: center; gap: 12px;
@@ -2490,7 +3206,7 @@ textarea.field-input {
 }
 .pv-tab svg { width: 18px; height: 18px; }
 .pv-tab.active { background: rgba(96,165,250,.08); color: #62b8ff; border: 1px solid rgba(96,165,250,.4); }
-.pv-tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+.pv-tab:hover:not(.active) { color: var(--text); background: rgba(204,145,102,.09); }
 .pv-tab-help {
   position: absolute;
   top: calc(100% + 12px);
@@ -2672,7 +3388,7 @@ textarea.field-input {
 }
 .pv-empty-btn:hover {
   border-color: var(--gold-br);
-  background: rgba(201,168,76,.06);
+  background: rgba(204,145,102,.06);
 }
 .pv-empty-btn.scan {
   color: #ad7bff;
@@ -2708,7 +3424,7 @@ textarea.field-input {
 
 .pv-desc-row, .pv-pago-row { padding: 10px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .pv-foot {
-  padding: 14px 16px; border-top: 1px solid rgba(201,168,76,.2);
+  padding: 14px 16px; border-top: 1px solid rgba(204,145,102,.2);
   background: var(--bg-elev-1); flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
@@ -2747,7 +3463,7 @@ textarea.field-input {
     position: relative;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid rgba(201,168,76,.12);
+    border-bottom: 1px solid rgba(204,145,102,.12);
   }
   .sidebar-inner { height: auto; }
   .side-nav {
@@ -2779,9 +3495,38 @@ textarea.field-input {
   .controls { gap: 6px; }
   .btn-text { margin-left: 0; }
 }
+
+/* HOME DASHBOARD */
+.home-shell { max-width: 1200px; margin: 0 auto; padding: 0 32px 60px; display: flex; flex-direction: column; gap: 24px; }
+.home-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.home-quick-card { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 16px 20px; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: var(--r-lg); cursor: pointer; transition: border-color var(--tx), background var(--tx), transform var(--tx); font-family: var(--f-ui); font-size: .82rem; font-weight: 500; color: var(--text-2); }
+.home-quick-card:hover { border-color: var(--gold-br); background: var(--bg-elev-3); transform: translateY(-2px); color: var(--text); }
+.home-quick-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--gold-lo); border: 1px solid var(--gold-br); display: flex; align-items: center; justify-content: center; color: var(--gold); }
+.home-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.home-kpi-card { background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px 24px; display: flex; flex-direction: column; gap: 4px; }
+.home-kpi-card--gold { border-color: var(--gold-br); background: linear-gradient(135deg, var(--bg-elev-2), rgba(204,145,102,.06)); }
+.home-kpi-label { font-size: .75rem; font-weight: 500; color: var(--text-4); text-transform: uppercase; letter-spacing: .04em; }
+.home-kpi-value { font-family: var(--f-mono); font-size: 1.9rem; font-weight: 600; color: var(--gold); line-height: 1.1; margin-top: 4px; }
+.home-kpi-value--sm { font-size: 1.2rem; }
+.home-kpi-sub { font-size: .72rem; color: var(--text-4); margin-top: 2px; }
+.home-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.home-chart-card { background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px 24px 18px; }
+.home-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.home-chart-title { font-size: .85rem; font-weight: 600; color: var(--text-2); }
+.home-chart-link { font-size: .75rem; color: var(--gold); background: none; border: none; cursor: pointer; padding: 0; font-family: var(--f-ui); transition: color var(--tx); }
+.home-chart-link:hover { color: var(--gold-hi); }
+.home-chart-big { font-family: var(--f-mono); font-size: 2rem; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+.home-recent-card { background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px 24px; }
+.home-recent-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: .82rem; }
+.home-recent-table th { text-align: left; font-weight: 500; color: var(--text-4); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; padding: 0 10px 10px; border-bottom: 1px solid var(--border); }
+.home-recent-table td { padding: 10px; color: var(--text-2); border-bottom: 1px solid var(--border); }
+.home-recent-table tr:last-child td { border-bottom: none; }
+.home-recent-table tr:hover td { background: var(--bg-elev-3); }
+@media (max-width: 900px) { .home-quick-grid { grid-template-columns: repeat(2, 1fr); } .home-kpi-grid { grid-template-columns: repeat(2, 1fr); } .home-charts-row { grid-template-columns: 1fr; } .home-shell { padding: 0 16px 48px; } }
+@media (max-width: 480px) { .home-kpi-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
-<body>
+<body class="ds-loading">
 <div class="dashboard-shell">
   <aside class="sidebar">
     <div class="sidebar-inner">
@@ -2793,54 +3538,49 @@ textarea.field-input {
         </div>
       </div>
 
-      <button type="button" class="side-cta" onclick="abrirModal()">
+      <button type="button" class="side-cta" onclick="mostrarVista('pos', document.querySelector(".side-link[data-v='pos']"))">
         <span class="side-cta-badge">+</span>
         <span>Nueva venta</span>
       </button>
 
-      <div class="side-panel">
-        <div class="side-panel-top">
-          <div class="side-counter">6</div>
-          <div>
-            <h3>Ventas</h3>
-            <p>Seguimiento activo del día</p>
-          </div>
-        </div>
-      </div>
 
       <nav class="side-nav" aria-label="Panel lateral">
-        <button type="button" class="side-link" onclick="mostrarVista('inicio', this)">
+        <button type="button" class="side-link active" data-v='inicio' onclick="mostrarVista('inicio', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14v-9.5"/></svg>
           <span>Inicio</span>
         </button>
-        <button type="button" class="side-link active" onclick="mostrarVista('ventas', this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M7 16V8"/><path d="M12 16V5"/><path d="M17 16v-4"/></svg>
-          <span>Ventas</span>
+        <button type="button" class="side-link" data-v='pos' onclick="mostrarVista('pos', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span>Punto de Venta</span>
         </button>
-        <button type="button" class="side-link" onclick="mostrarVista('ranking', this)">
+        <button type="button" class="side-link" data-v='ventas' onclick="mostrarVista('ventas', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M7 16V8"/><path d="M12 16V5"/><path d="M17 16v-4"/></svg>
+          <span>Historial</span>
+        </button>
+        <button type="button" class="side-link" data-v='ranking' onclick="mostrarVista('ranking', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
           <span>Ranking</span>
         </button>
-        <button type="button" class="side-link" onclick="mostrarVista('cortes', this)">
+        <button type="button" class="side-link" data-v='cortes' onclick="mostrarVista('cortes', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
           <span>Cortes</span>
         </button>
-        <button type="button" class="side-link" onclick="mostrarVista('caja', this)">
+        <button type="button" class="side-link" data-v='caja' onclick="mostrarVista('caja', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
           <span>Caja</span>
         </button>
-        <button type="button" class="side-link" onclick="mostrarVista('reportes', this)">
+        <button type="button" class="side-link" data-v='reportes' onclick="mostrarVista('reportes', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/></svg>
           <span>Reportes</span>
         </button>
       </nav>
 
       <div class="side-foot">
-        <button type="button" class="side-link" onclick="mostrarVista('soporte', this)">
+        <button type="button" class="side-link" data-v='soporte' onclick="mostrarVista('soporte', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.09 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
           <span>Soporte</span>
         </button>
-        <button type="button" class="side-link" onclick="mostrarVista('preferencias', this)">
+        <button type="button" class="side-link" data-v='preferencias' onclick="mostrarVista('preferencias', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v6"/><path d="M12 17v6"/><path d="M4.93 4.93l4.24 4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="M1 12h6"/><path d="M17 12h6"/><path d="m4.93 19.07 4.24-4.24"/><path d="m14.83 9.17 4.24-4.24"/></svg>
           <span>Preferencias</span>
         </button>
@@ -2921,97 +3661,132 @@ textarea.field-input {
     </section>
 
     <main class="main">
-  <section class="dashboard-view" data-view="inicio">
-    <div class="view-grid">
-      <div class="view-card">
-        <h3>Ventas activas</h3>
-        <p>Abre la vista de ventas para capturar operaciones y cobrar desde el nuevo punto de venta.</p>
-        <div class="view-value">23 movimientos</div>
+  <!-- HOME DASHBOARD -->
+  <section class="dashboard-view active" data-view="inicio">
+    <div class="home-shell">
+      <div class="home-quick-grid fade-up" style="animation-delay:60ms">
+        <button class="home-quick-card" onclick="mostrarVista('pos', document.querySelector('.side-link[data-v='pos']'))">
+          <div class="home-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+          <span>Nueva Venta</span>
+        </button>
+        <button class="home-quick-card" onclick="mostrarVista('ventas', document.querySelector('.side-link[data-v='ventas']'))">
+          <div class="home-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M4 19h16"/><path d="M7 16V8"/><path d="M12 16V5"/><path d="M17 16v-4"/></svg></div>
+          <span>Ver Historial</span>
+        </button>
+        <button class="home-quick-card" onclick="mostrarVista('ranking', document.querySelector('.side-link[data-v='ranking']'))">
+          <div class="home-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg></div>
+          <span>Ranking</span>
+        </button>
+        <button class="home-quick-card" onclick="mostrarVista('cortes', document.querySelector('.side-link[data-v='cortes']'))">
+          <div class="home-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></div>
+          <span>Corte de Caja</span>
+        </button>
       </div>
-      <div class="view-card">
-        <h3>Ranking</h3>
-        <p>Consulta quién va liderando y el monto vendido por cada vendedor.</p>
-        <div class="view-value">$5,660 líder</div>
+      <div class="home-kpi-grid fade-up" style="animation-delay:120ms">
+        <div class="home-kpi-card"><div class="home-kpi-label">Ventas hoy</div><div class="home-kpi-value" id="home-kpi-ventas">0</div><div class="home-kpi-sub">transacciones</div></div>
+        <div class="home-kpi-card home-kpi-card--gold"><div class="home-kpi-label">Facturación hoy</div><div class="home-kpi-value" id="home-kpi-facturacion">$0</div><div class="home-kpi-sub">total del día</div></div>
+        <div class="home-kpi-card"><div class="home-kpi-label">Ticket promedio</div><div class="home-kpi-value" id="home-kpi-ticket">$0</div><div class="home-kpi-sub">por venta</div></div>
+        <div class="home-kpi-card"><div class="home-kpi-label">Mejor vendedor</div><div class="home-kpi-value home-kpi-value--sm" id="home-kpi-top">—</div><div class="home-kpi-sub">del día</div></div>
       </div>
-      <div class="view-card">
-        <h3>Cortes</h3>
-        <p>Administra semanas de corte y revisa el resumen consolidado por periodo.</p>
-        <div class="view-value">Semana 19</div>
+      <div class="home-charts-row fade-up" style="animation-delay:180ms">
+        <div class="home-chart-card">
+          <div class="home-chart-header"><span class="home-chart-title">Historial</span><button class="home-chart-link" onclick="mostrarVista('ventas', document.querySelector('.side-link[data-v='ventas']'))">Ver reporte</button></div>
+          <div class="home-chart-big" id="home-ventas-big">0</div>
+          <canvas id="chartVentas" height="140"></canvas>
+        </div>
+        <div class="home-chart-card">
+          <div class="home-chart-header"><span class="home-chart-title">Facturación</span><button class="home-chart-link" onclick="mostrarVista('ventas', document.querySelector('.side-link[data-v='ventas']'))">Ver reporte</button></div>
+          <div class="home-chart-big" id="home-fact-big">$0</div>
+          <canvas id="chartFacturacion" height="140"></canvas>
+        </div>
+      </div>
+      <div class="home-recent-card fade-up" style="animation-delay:240ms">
+        <div class="home-chart-header"><span class="home-chart-title">Últimas ventas</span><button class="home-chart-link" onclick="mostrarVista('ventas', document.querySelector('.side-link[data-v='ventas']'))">Ver todas</button></div>
+        <table class="home-recent-table">
+          <thead><tr><th>Folio</th><th>Vendedor</th><th>Producto</th><th>Total</th><th>Pago</th></tr></thead>
+          <tbody id="home-recent-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text-4);padding:24px">Sin ventas aún</td></tr></tbody>
+        </table>
       </div>
     </div>
   </section>
 
   <section class="dashboard-view active" data-view="ventas">
 
-  <div class="vendedor-tabs fade-up" style="animation-delay:80ms" role="tablist">
-    <div class="tab active" data-vendedor="Todos" onclick="cambiarVendedor('Todos')">
-      <div class="tab-meta">Equipo completo</div>
-      <div class="tab-name">Todos</div>
-      <div class="tab-total" id="tab-total-Todos">$0</div>
-    </div>
-    <div class="tab" data-vendedor="Francisco" onclick="cambiarVendedor('Francisco')">
-      <div class="tab-meta">Vendedor</div>
-      <div class="tab-name">Francisco</div>
-      <div class="tab-total" id="tab-total-Francisco">$0</div>
-    </div>
-    <div class="tab" data-vendedor="Bofo" onclick="cambiarVendedor('Bofo')">
-      <div class="tab-meta">Vendedor</div>
-      <div class="tab-name">Bofo</div>
-      <div class="tab-total" id="tab-total-Bofo">$0</div>
-    </div>
-    <div class="tab" data-vendedor="Axel" onclick="cambiarVendedor('Axel')">
-      <div class="tab-meta">Vendedor</div>
-      <div class="tab-name">Axel</div>
-      <div class="tab-total" id="tab-total-Axel">$0</div>
+  <!-- ── VISTA HEADER ── -->
+  <div class="vv-header fade-up" style="animation-delay:40ms">
+    <h2 class="vv-title">Historial</h2>
+    <div class="vv-header-actions">
+      <button class="btn btn-ghost vv-download-btn" onclick="exportarCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Historial
+      </button>
+      <button class="btn btn-primary vv-crear-btn" onclick="abrirModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Crear
+        <svg class="vv-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
     </div>
   </div>
 
-  <div class="controls fade-up" style="animation-delay:160ms">
-    <button class="btn btn-primary" onclick="abrirModal()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nueva Venta
-    </button>
-    <button class="btn btn-ghost" onclick="exportarCSV()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar CSV
-    </button>
-    <select class="filtro" id="filtroPago" onchange="filtrar()">
-      <option value="">Todos los métodos de pago</option>
-      <option value="Efectivo">Efectivo</option>
-      <option value="Tarjeta">Tarjeta</option>
-      <option value="Transferencia">Transferencia</option>
-    </select>
-    <button class="btn btn-text" onclick="borrarDatosGuardados()">Restablecer datos</button>
+  <!-- ── BARRA DE BÚSQUEDA + FILTROS ── -->
+  <div class="vv-searchbar fade-up" style="animation-delay:100ms">
+    <div class="vv-search-input-wrap">
+      <svg class="vv-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input
+        type="text"
+        class="vv-search-input"
+        id="vvBusqueda"
+        placeholder="Filtrar por productos, vendedor o cliente"
+        oninput="vvFiltrar()"
+      />
+    </div>
+    <div class="vv-filter-actions">
+      <button class="vv-filter-btn" id="vvFiltrarBtn" onclick="vvAbrirFiltroModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filtrar
+        <span class="vv-filter-count" id="vvFiltroCount" style="display:none">0</span>
+      </button>
+      <button class="vv-filter-btn" id="vvSortBtn" onclick="vvAbrirOrdenModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+        Ordenar
+        <svg class="vv-chevron-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
   </div>
 
-  <div class="table-wrap fade-up" id="ventas-tabla" style="animation-delay:240ms">
-    <table>
+  <!-- ── TABLA ERP ── -->
+  <div class="vv-table-wrap fade-up" id="ventas-tabla" style="animation-delay:160ms">
+    <table class="vv-table">
       <thead>
         <tr>
-          <th>Folio</th>
-          <th>Fecha</th>
-          <th>Vendedor</th>
-          <th>Producto</th>
-          <th class="num">Cant.</th>
-          <th class="num">Precio</th>
-          <th class="num">Desc. %</th>
-          <th class="num">Total</th>
-          <th>Pago</th>
-          <th>Notas</th>
-          <th></th>
+          <th class="vv-th vv-th-check">
+            <input type="checkbox" class="vv-check" id="vvCheckAll" onchange="vvToggleAll(this)"/>
+          </th>
+          <th class="vv-th">Venta</th>
+          <th class="vv-th">Fecha</th>
+          <th class="vv-th">Cliente</th>
+          <th class="vv-th">Pago</th>
+          <th class="vv-th vv-th-num">Total</th>
+          <th class="vv-th vv-th-num">Deuda</th>
+          <th class="vv-th">Productos</th>
+          <th class="vv-th">Cajero</th>
+          <th class="vv-th">Vendedor</th>
+          <th class="vv-th">Canal</th>
+          <th class="vv-th">Factura</th>
+          <th class="vv-th vv-th-del"></th>
         </tr>
       </thead>
       <tbody id="cuerpo"></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="4" class="total-foot-label">Totales</td>
-          <td class="num total-foot-cant" id="totalCant">0</td>
-          <td colspan="2"></td>
-          <td class="total-foot-sum" id="totalVentas">$0</td>
-          <td colspan="3"></td>
-        </tr>
-      </tfoot>
     </table>
+    <!-- elementos ocultos para compatibilidad JS -->
+    <span id="totalCant"   style="display:none">0</span>
+    <span id="totalVentas" style="display:none">$0</span>
+    <select id="filtroPago" style="display:none"></select>
+    <div class="vv-empty" id="vvEmpty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <p>Sin ventas registradas</p>
+      <button class="btn btn-primary" onclick="abrirModal()">Registrar primera venta</button>
+    </div>
   </div>
 
   <!-- KPI Cards -->
@@ -3430,6 +4205,8 @@ function mostrarVista(vista, btn){
   });
   document.querySelectorAll(".side-link").forEach(el => el.classList.remove("active"));
   if(btn) btn.classList.add("active");
+  if(vista === "inicio") renderHome();
+  document.body.classList.remove("ds-loading");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -3479,80 +4256,57 @@ function isoToday(){
 function crearFila(v){
   const tr = document.createElement("tr");
   tr.dataset.vendedor = v.vendedor;
-  const vendOpts = vendedores.map(ve=>`<option ${ve===v.vendedor?"selected":""}>${ve}</option>`).join("");
-  const pagoOpts = pagos.map(p=>`<option ${p===v.pago?"selected":""}>${p}</option>`).join("");
-  const descClass = (parseFloat(v.desc)||0) > 0 ? "has-value" : "zero";
-  const descText = (parseFloat(v.desc)||0) > 0 ? v.desc+"%" : "—";
+
+  const precio = parseFloat(v.precio) || 0;
+  const cant   = parseInt(v.cant) || 1;
+  const desc   = parseFloat(v.desc) || 0;
+  const total  = calcTotal(precio, cant, desc);
+
+  const pagoClass = v.pago === "Efectivo" ? "vv-badge-pagada"
+    : v.pago === "Tarjeta" ? "vv-badge-pendiente"
+    : "vv-badge-pagada";
+
+  const prodBadge = v.producto
+    ? `<span class="vv-badge vv-badge-entregado"><span class="vv-badge-dot"></span>${escapeHTML(v.producto)}</span>`
+    : `<span style="color:var(--text-4)">—</span>`;
 
   tr.innerHTML = `
-    <td><input type="text" class="inp-folio" value="${escapeHTML(v.folio)}"></td>
-    <td>
-      <div class="fecha-cell">
-        <button type="button" class="fecha-trigger" data-dropdown="fecha">
-          <svg class="fecha-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span class="fecha-display">${fechaPretty(v.fecha)}</span>
-        </button>
-        <input type="hidden" class="inp-fecha" value="${escapeHTML(v.fecha)}">
-      </div>
+    <td class="vv-td-check">
+      <input type="checkbox" class="vv-check vv-row-check">
+      <input type="hidden" class="inp-folio"    value="${escapeHTML(v.folio)}">
+      <input type="hidden" class="inp-fecha"    value="${escapeHTML(v.fecha)}">
+      <input type="hidden" class="inp-vendedor" value="${escapeHTML(v.vendedor)}">
+      <input type="hidden" class="inp-producto" value="${escapeHTML(v.producto)}">
+      <input type="hidden" class="inp-cant"     value="${v.cant}">
+      <input type="hidden" class="inp-precio"   value="${v.precio}">
+      <input type="hidden" class="inp-desc"     value="${v.desc}">
+      <input type="hidden" class="inp-pago"     value="${escapeHTML(v.pago)}">
+      <input type="hidden" class="inp-notas"    value="${escapeHTML(v.notas)}">
     </td>
     <td>
-      <div class="vendor-pill-cell">
-        <button type="button" class="vendor-pill" data-v="${escapeHTML(v.vendedor)}" data-dropdown="vendedor">
-          <span class="pill-dot">${vendorInitial(v.vendedor)}</span>
-          <span class="pill-text">${escapeHTML(v.vendedor)}</span>
-          <svg class="pill-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <input type="hidden" class="inp-vendedor" value="${escapeHTML(v.vendedor)}">
-      </div>
+      <a href="#" class="vv-folio-link" onclick="vvAbrirDetalle(this);return false">${escapeHTML(v.folio)||"#—"}</a>
     </td>
-    <td><input type="text" class="inp-producto" value="${escapeHTML(v.producto)}" placeholder="—"></td>
-    <td class="cant-cell">
-      <div class="cant-display">
-        <button type="button" class="stepper-btn" onclick="stepCant(this,-1)" tabindex="-1">−</button>
-        <input type="number" class="inp-cant" value="${v.cant}" min="1">
-        <button type="button" class="stepper-btn" onclick="stepCant(this,+1)" tabindex="-1">+</button>
-      </div>
-    </td>
-    <td class="num"><div class="precio-cell"><span class="currency">$</span><input type="number" class="inp-precio num" value="${v.precio}" min="0"></div></td>
-    <td class="num">
-      <div class="cant-cell">
-        <div class="cant-display desc-stepper-wrap ${descClass}">
-          <button type="button" class="stepper-btn" onclick="stepDesc(this,-5)" tabindex="-1">−</button>
-          <input type="number" class="inp-desc inp-desc-stepper" value="${v.desc}" min="0" max="100">
-          <span class="desc-suffix">%</span>
-          <button type="button" class="stepper-btn" onclick="stepDesc(this,+5)" tabindex="-1">+</button>
-        </div>
-      </div>
-    </td>
-    <td class="total-cell td-total"></td>
+    <td style="color:var(--text-3);font-size:.8rem">${fechaPretty(v.fecha)}</td>
+    <td style="color:var(--text-4)">—</td>
     <td>
-      <div class="pago-cell">
-        <button type="button" class="pago-badge" data-p="${escapeHTML(v.pago)}" data-dropdown="pago">
-          <span class="badge-text">${escapeHTML(v.pago)}</span>
-          <svg class="pill-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <input type="hidden" class="inp-pago" value="${escapeHTML(v.pago)}">
-      </div>
+      <span class="vv-badge ${pagoClass}">
+        <span class="vv-badge-dot"></span>${escapeHTML(v.pago||"—")}
+      </span>
     </td>
-    <td><input type="text" class="inp-notas" value="${escapeHTML(v.notas)}" placeholder="—"></td>
-    <td><button class="btn-del" onclick="eliminarFila(this)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td>
+    <td class="vv-td-num vv-total-cell td-total">${fmt(total)}</td>
+    <td class="vv-td-num" style="color:var(--text-4)">—</td>
+    <td>${prodBadge}</td>
+    <td style="color:var(--text-2)">${escapeHTML(v.vendedor||"—")}</td>
+    <td style="color:var(--text-4)">—</td>
+    <td class="vv-canal">Punto de Venta</td>
+    <td style="color:var(--text-4)">—</td>
+    <td class="vv-td-del">
+      <button class="btn-del vv-btn-del" onclick="eliminarFila(this)" title="Eliminar venta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1.87 13.18A2 2 0 0 1 15.14 21H8.86a2 2 0 0 1-1.99-1.82L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </td>
   `;
 
-  // vendor + pago pickers handled globally via custom dropdown
-
-  // sync desc display state (color)
-  const descInp = tr.querySelector(".inp-desc");
-  descInp.addEventListener("input", () => {
-    const v = parseFloat(descInp.value) || 0;
-    const wrap = tr.querySelector(".desc-stepper-wrap");
-    wrap.classList.toggle("has-value", v > 0);
-    wrap.classList.toggle("zero", v <= 0);
-  });
-
-  tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", () => {
-    recalcFila(tr);
-    filtrar();
-  }));
   return tr;
 }
 
@@ -3846,9 +4600,12 @@ function renderizar(){
   datosCargar.forEach(v => { const tr=crearFila(v); tbody.appendChild(tr); recalcFila(tr); });
   if(!guardado) autoguardar();
   filtrar();
+  vvFiltrar();
+  const defaultOpt = document.querySelector(".vv-sort-opt[data-val='newest']");
+  if(defaultOpt) defaultOpt.classList.add("selected");
 }
 
-function eliminarFila(btn){ btn.closest("tr").remove(); actualizarTotales(); autoguardar(); refrescarCorte(); }
+function eliminarFila(btn){ btn.closest("tr").remove(); actualizarTotales(); vvFiltrar(); autoguardar(); refrescarCorte(); }
 
 /* ── EXPORT ──────────────────────────── */
 function exportarCSV(){
@@ -3875,9 +4632,9 @@ function exportarCSV(){
 
 /* ── PUNTO DE VENTA ──────────────────── */
 const VENDOR_COLORS = {
-  Francisco: { bg: "linear-gradient(135deg, #E2C26A, #C9A84C)", color: "#1a1408" },
+  Francisco: { bg: "linear-gradient(135deg, #ffd89c, #cc9166)", color: "#1a1408" },
   Bofo:      { bg: "linear-gradient(135deg, #93BFFC, #60A5FA)", color: "#0a1428" },
-  Axel:      { bg: "linear-gradient(135deg, #C4B0FB, #A78BFA)", color: "#1a0e2e" },
+  Axel:      { bg: "linear-gradient(135deg, #C4B0FB, #cdcdcd)", color: "#1a0e2e" },
 };
 
 /* catálogo base (se complementa con inventario CSV si existe) */
@@ -4103,6 +4860,7 @@ function guardarModal(){
   });
 
   filtrar();
+  vvFiltrar();
   autoguardar();
   refrescarCorte();
   cerrarModal();
@@ -4125,6 +4883,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   initDropdowns();
   renderizar();
+  mostrarVista('inicio', document.querySelector("[data-v='inicio']"));
   /* cortes semanales */
   poblarSelectorCortes();
   cargarCorte();
@@ -4561,6 +5320,398 @@ function ciclarTema(){
     });
   });
 })();
+
+/* HOME DASHBOARD */
+function leerVentasDOM(){
+  const ventas = [];
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    if(tr.classList.contains("empty-row")) return;
+    ventas.push({
+      folio:    tr.querySelector(".inp-folio")?.value||"",
+      fecha:    tr.querySelector(".inp-fecha")?.value||"",
+      vendedor: tr.querySelector(".inp-vendedor")?.value||"",
+      producto: tr.querySelector(".inp-producto")?.value||"",
+      cant:     parseInt(tr.querySelector(".inp-cant")?.value)||0,
+      precio:   parseFloat(tr.querySelector(".inp-precio")?.value)||0,
+      desc:     parseFloat(tr.querySelector(".inp-desc")?.value)||0,
+      pago:     tr.querySelector(".inp-pago")?.value||"",
+    });
+  });
+  return ventas.length ? ventas : ventasDemo;
+}
+function renderHome(){
+  const ventas = leerVentasDOM();
+  const hoy = new Date().toISOString().slice(0,10);
+  const ventasHoy = ventas.filter(v => v.fecha === hoy);
+  const totalFact = ventasHoy.reduce((a,v) => a + (v.precio * v.cant * (1 - (v.desc||0)/100)), 0);
+  const ticket = ventasHoy.length ? totalFact / ventasHoy.length : 0;
+  const byVendor = {};
+  ventasHoy.forEach(v => { byVendor[v.vendedor] = (byVendor[v.vendedor]||0) + (v.precio * v.cant * (1 - (v.desc||0)/100)); });
+  const top = Object.entries(byVendor).sort((a,b) => b[1]-a[1])[0];
+  const fmt = n => n.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const el = id => document.getElementById(id);
+  if(el("home-kpi-ventas")) el("home-kpi-ventas").textContent = ventasHoy.length;
+  if(el("home-kpi-facturacion")) el("home-kpi-facturacion").textContent = "$"+fmt(totalFact);
+  if(el("home-kpi-ticket")) el("home-kpi-ticket").textContent = "$"+fmt(ticket);
+  if(el("home-kpi-top")) el("home-kpi-top").textContent = top ? top[0] : "—";
+  const dias = Array.from({length:7}, (_,i) => { const d=new Date(); d.setDate(d.getDate()-6+i); return d.toISOString().slice(0,10); });
+  const labels = dias.map(d => { const [,m,day]=d.split("-"); return day+" "+["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"][parseInt(m)-1]; });
+  const cntData  = dias.map(d => ventas.filter(v => v.fecha===d).length);
+  const factData = dias.map(d => ventas.filter(v => v.fecha===d).reduce((a,v)=>a+(v.precio*v.cant*(1-(v.desc||0)/100)),0));
+  if(el("home-ventas-big")) el("home-ventas-big").textContent = ventas.length;
+  if(el("home-fact-big")) el("home-fact-big").textContent = "$"+fmt(ventas.reduce((a,v)=>a+(v.precio*v.cant*(1-(v.desc||0)/100)),0));
+  const gold="#cc9166", goldA="rgba(204,145,102,0.15)";
+  const text3="#acafb9", border="rgba(204,145,102,.09)";
+  const buildChart = (id, data, prefix) => {
+    const ctx = document.getElementById(id); if(!ctx) return;
+    if(ctx._chart) ctx._chart.destroy();
+    ctx._chart = new Chart(ctx, { type:"line", data:{ labels, datasets:[{ data, borderColor:gold, backgroundColor:goldA, borderWidth:2, pointRadius:3, pointBackgroundColor:gold, fill:true, tension:.4 }] }, options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => prefix+c.parsed.y.toLocaleString("es-MX") } } }, scales:{ x:{ticks:{color:text3,font:{size:11}},grid:{color:border}}, y:{ticks:{color:text3,font:{size:11},callback:v=>prefix+v},grid:{color:border},beginAtZero:true} } } });
+  };
+  if(typeof Chart !== "undefined"){ buildChart("chartVentas", cntData, ""); buildChart("chartFacturacion", factData, "$"); }
+  const tbody = el("home-recent-tbody");
+  if(!tbody) return;
+  const recientes = [...ventas].reverse().slice(0,5);
+  tbody.innerHTML = recientes.length ? recientes.map(v => { const tot=(v.precio*v.cant*(1-(v.desc||0)/100)).toLocaleString("es-MX",{style:"currency",currency:"MXN"}); return '<tr><td>'+escapeHTML(v.folio)+'</td><td>'+escapeHTML(v.vendedor)+'</td><td>'+escapeHTML(v.producto)+'</td><td style="color:var(--gold);font-family:var(--f-mono)">'+tot+'</td><td>'+escapeHTML(v.pago)+'</td></tr>'; }).join("") : '<tr><td colspan="5" style="text-align:center;color:var(--text-4);padding:24px">Sin ventas aún</td></tr>';
+}
+
+/* ── NUEVA UI VENTAS ─────────────────── */
+function vvFiltrar(){
+  const q = (document.getElementById("vvBusqueda")?.value || "").toLowerCase().trim();
+  let visible = 0;
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    if(tr.classList.contains("empty-row")) return;
+    const vendedor = (tr.querySelector(".inp-vendedor")?.value || "").toLowerCase();
+    const producto = (tr.querySelector(".inp-producto")?.value || "").toLowerCase();
+    const folio    = (tr.querySelector(".inp-folio")?.value    || "").toLowerCase();
+    const notas    = (tr.querySelector(".inp-notas")?.value    || "").toLowerCase();
+    const match = !q || vendedor.includes(q) || producto.includes(q) || folio.includes(q) || notas.includes(q);
+    tr.style.display = match ? "" : "none";
+    if(match) visible++;
+  });
+  const emptyEl = document.getElementById("vvEmpty");
+  if(emptyEl) emptyEl.style.display = visible === 0 ? "flex" : "none";
+  actualizarTotales();
+}
+
+function vvToggleAll(chk){
+  document.querySelectorAll(".vv-row-check").forEach(c => c.checked = chk.checked);
+}
+
+function vvToggleFiltros(){
+  const btn = event.currentTarget;
+  btn.classList.toggle("active");
+}
+let _vvSortSelected = "newest";
+
+function vvToggleSort(){
+  const wrap = document.getElementById("vvSortWrap");
+  const isOpen = wrap.classList.toggle("open");
+  document.getElementById("vvSortBtn").setAttribute("aria-expanded", isOpen);
+}
+
+function vvSelectSort(li){
+  const val = li.dataset.val;
+  _vvSortSelected = val;
+  document.querySelectorAll(".vv-sort-opt").forEach(o => o.classList.toggle("selected", o === li));
+  document.getElementById("vvSortWrap").classList.remove("open");
+  document.getElementById("vvSortBtn").setAttribute("aria-expanded", "false");
+  vvAplicarOrden(val);
+}
+
+function vvAplicarOrden(val){
+  const tbody = document.getElementById("cuerpo");
+  const filas = [...tbody.querySelectorAll("tr")].filter(tr => !tr.classList.contains("empty-row"));
+  filas.sort((a, b) => {
+    const getTotal = tr => {
+      const p = parseFloat(tr.querySelector(".inp-precio")?.value) || 0;
+      const c = parseInt(tr.querySelector(".inp-cant")?.value) || 0;
+      const d = parseFloat(tr.querySelector(".inp-desc")?.value) || 0;
+      return calcTotal(p, c, d);
+    };
+    const getFolio = tr => tr.querySelector(".inp-folio")?.value || "";
+    if(val === "newest")     return getFolio(b).localeCompare(getFolio(a));
+    if(val === "oldest")     return getFolio(a).localeCompare(getFolio(b));
+    if(val === "total_desc") return getTotal(b) - getTotal(a);
+    if(val === "total_asc")  return getTotal(a) - getTotal(b);
+    return 0;
+  });
+  filas.forEach(tr => tbody.appendChild(tr));
+}
+
+/* cerrar sort al click fuera */
+document.addEventListener("mousedown", e => {
+  const wrap = document.getElementById("vvSortWrap");
+  if(wrap && !wrap.contains(e.target)){
+    wrap.classList.remove("open");
+    document.getElementById("vvSortBtn")?.setAttribute("aria-expanded","false");
+  }
+});
+
+/* ── MODAL FILTROS ── */
+function vvAbrirOrdenModal(){
+  document.getElementById("smOverlay").classList.add("open");
+}
+function vvCerrarOrdenModal(e){
+  if(e && e.target !== document.getElementById("smOverlay")) return;
+  document.getElementById("smOverlay").classList.remove("open");
+}
+function vvSelectSortModal(li){
+  document.querySelectorAll(".sm-opt").forEach(o => o.classList.toggle("selected", o === li));
+  vvAplicarOrden(li.dataset.val);
+  document.getElementById("smOverlay").classList.remove("open");
+}
+
+function vvAbrirFiltroModal(){
+  document.getElementById("fmOverlay").classList.add("open");
+}
+function vvCerrarFiltroModal(e){
+  if(e && e.target !== document.getElementById("fmOverlay")) return;
+  document.getElementById("fmOverlay").classList.remove("open");
+}
+function vvTogglePill(btn){
+  btn.classList.toggle("active");
+  vvActualizarConteo();
+}
+function vvActualizarConteo(){
+  const selects = ["fm-fecha","fm-pago-sel","fm-caja","fm-cajero"];
+  let n = selects.filter(id => document.getElementById(id)?.value).length;
+  n += document.querySelectorAll(".fm-pill.active").length;
+  document.getElementById("fmConteo").textContent = n;
+  const badge = document.getElementById("vvFiltroCount");
+  if(badge){ badge.textContent = n; badge.style.display = n > 0 ? "" : "none"; }
+  const btn = document.getElementById("vvFiltrarBtn");
+  if(btn) btn.classList.toggle("active", n > 0);
+}
+function vvLimpiarFiltros(){
+  ["fm-fecha","fm-pago-sel","fm-caja","fm-cajero"].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = "";
+  });
+  document.querySelectorAll(".fm-pill.active").forEach(p => p.classList.remove("active"));
+  vvActualizarConteo();
+}
+function vvAplicarFiltros(){
+  const pago   = document.getElementById("fm-pago-sel")?.value || "";
+  const cajero = document.getElementById("fm-cajero")?.value || "";
+
+  document.querySelectorAll("#cuerpo tr").forEach(tr => {
+    if(tr.classList.contains("empty-row")) return;
+    const trPago    = tr.querySelector(".inp-pago")?.value    || "";
+    const trVendedor= tr.querySelector(".inp-vendedor")?.value|| "";
+    const matchPago   = !pago   || trPago     === pago;
+    const matchCajero = !cajero || trVendedor === cajero;
+    tr.style.display = (matchPago && matchCajero) ? "" : "none";
+  });
+
+  vvFiltrar();
+  document.getElementById("fmOverlay").classList.remove("open");
+}
+
+function vvAbrirDetalle(link){
+  const tr = link.closest("tr");
+  const v = {
+    folio:    tr.querySelector(".inp-folio").value,
+    fecha:    tr.querySelector(".inp-fecha").value,
+    vendedor: tr.querySelector(".inp-vendedor").value,
+    producto: tr.querySelector(".inp-producto").value,
+    cant:     tr.querySelector(".inp-cant").value,
+    precio:   tr.querySelector(".inp-precio").value,
+    desc:     tr.querySelector(".inp-desc").value,
+    pago:     tr.querySelector(".inp-pago").value,
+    notas:    tr.querySelector(".inp-notas").value,
+  };
+  const precio = parseFloat(v.precio)||0;
+  const cant   = parseInt(v.cant)||1;
+  const desc   = parseFloat(v.desc)||0;
+  const total  = calcTotal(precio, cant, desc);
+
+  // rellena el modal de nueva venta con los datos actuales para editar
+  const modal = document.getElementById("modal-nueva-venta");
+  if(!modal) return;
+  const setVal = (sel, val) => { const e = modal.querySelector(sel); if(e) e.value = val; };
+  setVal("#m-vendedor", v.vendedor);
+  setVal("#m-producto", v.producto);
+  setVal("#m-cant",     v.cant);
+  setVal("#m-precio",   v.precio);
+  setVal("#m-pago",     v.pago);
+  setVal("#m-notas",    v.notas);
+  modal.dataset.editTr = "";
+  modal._editTr = tr;
+  abrirModal();
+}
 </script>
+
+<!-- ── MODAL FILTROS ── -->
+<div class="fm-overlay" id="fmOverlay" onclick="vvCerrarFiltroModal(event)">
+  <div class="fm-panel" id="fmPanel">
+
+    <!-- Header -->
+    <div class="fm-header">
+      <h4 class="fm-title">Filtros</h4>
+      <button class="fm-close" onclick="vvCerrarFiltroModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="fm-body">
+
+      <!-- Fecha -->
+      <div class="fm-card">
+        <div class="fm-row">
+          <div class="fm-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Fecha
+          </div>
+          <select class="fm-select" id="fm-fecha" onchange="vvActualizarConteo()">
+            <option value="">Seleccionar Fecha</option>
+            <option value="hoy">Hoy</option>
+            <option value="semana">Esta semana</option>
+            <option value="mes">Este mes</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Método de Pago + Caja -->
+      <div class="fm-card">
+        <div class="fm-row">
+          <div class="fm-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Método de Pago
+          </div>
+          <select class="fm-select" id="fm-pago-sel" onchange="vvActualizarConteo()">
+            <option value="">Todos los Métodos de Pago</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Tarjeta">Tarjeta</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+        </div>
+        <div class="fm-row" style="margin-top:12px">
+          <div class="fm-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+            Caja
+          </div>
+          <select class="fm-select" id="fm-caja" onchange="vvActualizarConteo()">
+            <option value="">Todas las Cajas</option>
+            <option value="Punto de Venta">Punto de Venta</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cajero -->
+      <div class="fm-card">
+        <div class="fm-row">
+          <div class="fm-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+            Cajero
+          </div>
+          <select class="fm-select" id="fm-cajero" onchange="vvActualizarConteo()">
+            <option value="">Todos los Cajeros</option>
+            <option value="Francisco">Francisco</option>
+            <option value="Bofo">Bofo</option>
+            <option value="Axel">Axel</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pago pills -->
+      <div class="fm-card">
+        <div class="fm-label fm-label-mb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Pago
+        </div>
+        <div class="fm-pills" id="fm-pills-pago">
+          <button class="fm-pill" data-group="pago" data-val="Pagadas" onclick="vvTogglePill(this)">Pagadas</button>
+          <button class="fm-pill" data-group="pago" data-val="Impagas" onclick="vvTogglePill(this)">Impagas</button>
+          <button class="fm-pill" data-group="pago" data-val="Deuda Pendiente" onclick="vvTogglePill(this)">Deuda Pendiente</button>
+        </div>
+      </div>
+
+      <!-- Entrega pills -->
+      <div class="fm-card">
+        <div class="fm-label fm-label-mb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+          Entrega
+        </div>
+        <div class="fm-pills" id="fm-pills-entrega">
+          <button class="fm-pill" data-group="entrega" data-val="Entregadas" onclick="vvTogglePill(this)">Entregadas</button>
+          <button class="fm-pill" data-group="entrega" data-val="No entregadas" onclick="vvTogglePill(this)">No entregadas</button>
+        </div>
+      </div>
+
+      <!-- Factura pills -->
+      <div class="fm-card">
+        <div class="fm-label fm-label-mb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          Factura
+        </div>
+        <div class="fm-pills" id="fm-pills-factura">
+          <button class="fm-pill" data-group="factura" data-val="Facturada" onclick="vvTogglePill(this)">Facturada</button>
+          <button class="fm-pill" data-group="factura" data-val="No facturada" onclick="vvTogglePill(this)">No facturada</button>
+        </div>
+      </div>
+
+    </div><!-- /fm-body -->
+
+    <!-- Footer -->
+    <div class="fm-footer">
+      <button class="fm-btn-clear" id="fmBtnLimpiar" onclick="vvLimpiarFiltros()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1.87 13.18A2 2 0 0115.14 21H8.86a2 2 0 01-1.99-1.82L5 6"/></svg>
+        Limpiar (<span id="fmConteo">0</span>)
+      </button>
+      <button class="fm-btn-apply" onclick="vvAplicarFiltros()">Ver Resultados</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MODAL ORDENAR ── -->
+<div class="fm-overlay" id="smOverlay" onclick="vvCerrarOrdenModal(event)">
+  <div class="fm-panel sm-panel">
+
+    <div class="fm-header">
+      <h4 class="fm-title">Ordenar por</h4>
+      <button type="button" class="fm-close" onclick="vvCerrarOrdenModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="fm-body sm-body">
+      <div class="fm-card sm-card">
+        <ul class="sm-list" role="listbox">
+          <li class="sm-opt selected" data-val="newest" onclick="vvSelectSortModal(this)">
+            <span>Creación (recientes primero)</span>
+            <svg class="sm-check" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z" clip-rule="evenodd"/></svg>
+          </li>
+          <li class="sm-opt" data-val="oldest" onclick="vvSelectSortModal(this)">
+            <span>Creación (antiguos primero)</span>
+            <svg class="sm-check" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z" clip-rule="evenodd"/></svg>
+          </li>
+          <li class="sm-opt" data-val="total_desc" onclick="vvSelectSortModal(this)">
+            <span>Mayor Total</span>
+            <svg class="sm-check" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z" clip-rule="evenodd"/></svg>
+          </li>
+          <li class="sm-opt" data-val="total_asc" onclick="vvSelectSortModal(this)">
+            <span>Menor Total</span>
+            <svg class="sm-check" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z" clip-rule="evenodd"/></svg>
+          </li>
+          <li class="sm-opt" data-val="debt_desc" onclick="vvSelectSortModal(this)">
+            <span>Mayor Deuda</span>
+            <svg class="sm-check" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z" clip-rule="evenodd"/></svg>
+          </li>
+          <li class="sm-opt" data-val="debt_asc" onclick="vvSelectSortModal(this)">
+            <span>Menor Deuda</span>
+            <svg class="sm-check" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 011.04-.207z" clip-rule="evenodd"/></svg>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fm-footer">
+      <button type="button" class="fm-btn-apply sm-btn-apply" onclick="vvCerrarOrdenModal()">Listo</button>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
