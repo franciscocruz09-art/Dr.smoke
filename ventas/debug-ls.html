@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html><body>
+<h2>Debug localStorage drsmoke_ventas</h2>
+<pre id="out"></pre>
+<script>
+const raw = localStorage.getItem("drsmoke_ventas");
+document.getElementById("out").textContent = raw
+  ? JSON.stringify(JSON.parse(raw), null, 2)
+  : "(vacio)";
+</script>
+</body></html>
