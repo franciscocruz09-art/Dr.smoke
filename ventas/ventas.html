@@ -8,6 +8,29 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script type="module">
+// ── FIREBASE INIT ──────────────────────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD36QPctDOzHn9hVKOCfwdJRagAoKd8EIk",
+  authDomain: "drsmoke-8d1fc.firebaseapp.com",
+  projectId: "drsmoke-8d1fc",
+  storageBucket: "drsmoke-8d1fc.firebasestorage.app",
+  messagingSenderId: "475896004590",
+  appId: "1:475896004590:web:8656e90b2eebe3d867d8ff",
+  measurementId: "G-GS121DN3PN"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db    = getFirestore(fbApp);
+
+// Exponer en window para que el código no-module lo use
+window._fb = { db, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, getDoc };
+window._fbReady = true;
+window.dispatchEvent(new Event("firebase-ready"));
+</script>
 <style>
 body.ds-loading { visibility: hidden; }
 </style>
@@ -9401,6 +9424,86 @@ const VENTAS_STORAGE_KEY = "drsmoke_ventas";
 const VENTAS_STORAGE_BACKUP_KEY = "drsmoke_ventas_backup";
 let ventasState = [];
 
+// ── FIREBASE SYNC ─────────────────────────────────────────────────────────
+let _fbUnsubscribe = null;
+let _fbSyncEnabled = false;
+
+function _fbGetVentasCol(){
+  return window._fb ? window._fb.collection(window._fb.db, "ventas") : null;
+}
+
+async function fbGuardarVenta(venta){
+  if(!window._fb) return;
+  const { db, doc, setDoc } = window._fb;
+  const ref = doc(db, "ventas", venta.folio);
+  await setDoc(ref, venta);
+}
+
+async function fbEliminarVenta(folio){
+  if(!window._fb) return;
+  const { db, doc, deleteDoc } = window._fb;
+  await deleteDoc(doc(db, "ventas", folio));
+}
+
+async function fbGuardarTodas(ventas){
+  if(!window._fb || !ventas.length) return;
+  const { db, writeBatch, doc } = window._fb;
+  // Firestore batch max 500 docs
+  const chunks = [];
+  for(let i = 0; i < ventas.length; i += 499) chunks.push(ventas.slice(i, i+499));
+  for(const chunk of chunks){
+    const batch = writeBatch(db);
+    chunk.forEach(v => batch.set(doc(db, "ventas", v.folio), v));
+    await batch.commit();
+  }
+}
+
+function fbIniciarSync(){
+  if(_fbUnsubscribe) _fbUnsubscribe();
+  const col = _fbGetVentasCol();
+  if(!col) return;
+  _fbUnsubscribe = window._fb.onSnapshot(col, snap => {
+    if(_ventasHydrating) return;
+    const remoto = [];
+    snap.forEach(d => remoto.push(normalizarVenta(d.data())));
+    remoto.sort((a,b) => a.folio.localeCompare(b.folio));
+    const localStr = JSON.stringify(ventasState.map(v=>v.folio).sort());
+    const remotoStr = JSON.stringify(remoto.map(v=>v.folio).sort());
+    if(localStr === remotoStr) return; // sin cambios reales
+    // Actualizar estado y UI sin perder posición
+    ventasState = remoto;
+    localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(ventasState));
+    localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(ventasState));
+    if(remoto.length > 0){
+      folioCount = Math.max(...remoto.map(v => parseInt(v.folio.replace("DS-",""))||0)) + 1;
+      localStorage.setItem("drsmoke_folioCount", folioCount);
+    }
+    // Re-renderizar tabla silenciosamente
+    const tbody = document.getElementById("cuerpo");
+    if(tbody){
+      _ventasHydrating = true;
+      tbody.innerHTML = "";
+      ventasState.forEach(v => {
+        try{ const tr = crearFila(v); tbody.appendChild(tr); recalcFila(tr); } catch(e){}
+      });
+      _ventasHydrating = false;
+      try{ filtrar(); } catch(e){}
+      try{ vvFiltrar(); } catch(e){}
+      actualizarTotales();
+    }
+    // indicador sincronizado
+    const ind = document.getElementById("autoguardado");
+    if(ind){ _setSaveText(ind, "Sincronizado"); }
+  }, err => {
+    console.warn("[firebase] onSnapshot error:", err);
+  });
+  _fbSyncEnabled = true;
+}
+
+window.addEventListener("firebase-ready", () => {
+  fbIniciarSync();
+});
+
 function normalizarVenta(v){
   return {
     folio: String(v?.folio ?? ""),
@@ -9462,12 +9565,14 @@ function guardarVentasStorage(datos){
     localStorage.setItem(VENTAS_STORAGE_KEY, payload);
     localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, payload);
     localStorage.setItem("drsmoke_folioCount", folioCount);
-    return true;
   } catch(e){
     console.error("[ventas] No se pudo guardar en localStorage:", e);
-    alert("No se pudieron guardar las ventas. Revisa el espacio de almacenamiento del navegador.");
-    return false;
   }
+  // Sincronizar con Firebase si está disponible
+  if(window._fbReady){
+    fbGuardarTodas(ventasState).catch(e => console.warn("[firebase] guardar falló:", e));
+  }
+  return true;
 }
 
 function persistirTabla({ preserveExistingOnEmpty = true } = {}){
@@ -9538,7 +9643,17 @@ function borrarDatosGuardados(){
     localStorage.removeItem(VENTAS_STORAGE_KEY);
     localStorage.removeItem(VENTAS_STORAGE_BACKUP_KEY);
     localStorage.removeItem("drsmoke_folioCount");
-    location.reload();
+    // Borrar también de Firestore
+    if(window._fbReady){
+      const { db, collection, getDocs, writeBatch, doc } = window._fb;
+      getDocs(collection(db, "ventas")).then(snap => {
+        const batch = writeBatch(db);
+        snap.forEach(d => batch.delete(doc(db, "ventas", d.id)));
+        return batch.commit();
+      }).then(() => location.reload()).catch(() => location.reload());
+    } else {
+      location.reload();
+    }
   }
 }
 
@@ -10210,40 +10325,50 @@ function filtrar(){
 }
 
 /* ── RENDER ──────────────────────────── */
-function renderizar(){
+function _renderizarDatos(datosCargar, guardado){
   const tbody = document.getElementById("cuerpo");
   if(!tbody) return;
-  _ventasHydrating = true; // bloquea autoguardado durante toda la carga
-  const guardado = cargarDatosGuardados();
-  const datosCargar = clonarVentas(guardado ?? ventasDemo);
+  _ventasHydrating = true;
   ventasState = clonarVentas(datosCargar);
   const fc = localStorage.getItem("drsmoke_folioCount");
   if(fc) folioCount = parseInt(fc) || (datosCargar.length + 1);
   else folioCount = datosCargar.length + 1;
-
   tbody.innerHTML = "";
   datosCargar.forEach(v => {
-    try {
-      const tr = crearFila(v);
-      tbody.appendChild(tr);
-      recalcFila(tr);
-    } catch(e){
-      console.error("[ventas] fila no se pudo pintar:", e, v);
-    }
+    try { const tr = crearFila(v); tbody.appendChild(tr); recalcFila(tr); }
+    catch(e){ console.error("[ventas] fila no se pudo pintar:", e, v); }
   });
   _ventasHydrating = false;
-
-  // Si NO había nada guardado, sembramos el demo en storage una sola vez.
-  // Nunca sobrescribimos datos guardados existentes al cargar.
-  if(guardado === null){
-    guardarVentasStorage(ventasState);
-  }
-
-  // Los renders secundarios no deben romper la carga del historial.
+  if(guardado === null) guardarVentasStorage(ventasState);
   try { filtrar(); } catch(e){ console.error("[ventas] filtrar() falló:", e); }
   try { vvFiltrar(); } catch(e){ console.error("[ventas] vvFiltrar() falló:", e); }
   const defaultOpt = document.querySelector(".vv-sort-opt[data-val='newest']");
   if(defaultOpt) defaultOpt.classList.add("selected");
+}
+
+function renderizar(){
+  const guardadoLocal = cargarDatosGuardados();
+  // Carga local primero (inmediata), luego Firebase sobreescribe via onSnapshot
+  const datosInicial = clonarVentas(guardadoLocal ?? ventasDemo);
+  _renderizarDatos(datosInicial, guardadoLocal);
+
+  // Si Firebase ya está listo, cargar desde Firestore
+  if(window._fbReady){
+    const { db, collection, getDocs } = window._fb;
+    getDocs(collection(db, "ventas")).then(snap => {
+      const remoto = [];
+      snap.forEach(d => remoto.push(normalizarVenta(d.data())));
+      remoto.sort((a,b) => a.folio.localeCompare(b.folio));
+      if(remoto.length > 0){
+        localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(remoto));
+        localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(remoto));
+        const maxFolio = Math.max(...remoto.map(v => parseInt(v.folio.replace("DS-",""))||0));
+        folioCount = maxFolio + 1;
+        localStorage.setItem("drsmoke_folioCount", folioCount);
+        _renderizarDatos(remoto, remoto);
+      }
+    }).catch(e => console.warn("[firebase] getDocs falló, usando local:", e));
+  }
 }
 
 function eliminarFila(btn){
@@ -10253,6 +10378,8 @@ function eliminarFila(btn){
   if(folio){
     ventasState = ventasState.filter(v => v.folio !== folio);
     guardarVentasStorage(ventasState);
+    // Borrar de Firestore también
+    if(window._fbReady) fbEliminarVenta(folio).catch(e => console.warn("[firebase] delete falló:", e));
   } else {
     autoguardar();
   }
@@ -10536,8 +10663,18 @@ function guardarModal(){
     recalcFila(tr);
   });
 
-  ventasState = ventasState.concat(clonarVentas(ventasNuevas));
-  guardarVentasStorage(ventasState);
+  const ventasNormalizadas = clonarVentas(ventasNuevas);
+  ventasState = ventasState.concat(ventasNormalizadas);
+  // Guardar local inmediato
+  try {
+    localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(ventasState));
+    localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(ventasState));
+    localStorage.setItem("drsmoke_folioCount", folioCount);
+  } catch(e){}
+  // Subir a Firebase individualmente (más eficiente que subir todo)
+  if(window._fbReady){
+    ventasNormalizadas.forEach(v => fbGuardarVenta(v).catch(e => console.warn("[firebase] guardar venta:", e)));
+  }
   filtrar();
   vvFiltrar();
   refrescarCorte();
