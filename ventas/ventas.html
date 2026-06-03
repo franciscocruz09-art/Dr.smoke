@@ -8,28 +8,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script type="module">
-// ── FIREBASE INIT ──────────────────────────────────────────────────────────
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyD36QPctDOzHn9hVKOCfwdJRagAoKd8EIk",
-  authDomain: "drsmoke-8d1fc.firebaseapp.com",
-  projectId: "drsmoke-8d1fc",
-  storageBucket: "drsmoke-8d1fc.firebasestorage.app",
-  messagingSenderId: "475896004590",
-  appId: "1:475896004590:web:8656e90b2eebe3d867d8ff",
-  measurementId: "G-GS121DN3PN"
-};
-
-const fbApp = initializeApp(firebaseConfig);
-const db    = getFirestore(fbApp);
-
-// Exponer en window para que el código no-module lo use
-window._fb = { db, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, getDoc };
-window._fbReady = true;
-window.dispatchEvent(new Event("firebase-ready"));
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE INIT ──────────────────────────────────────────────────────────
+const SUPABASE_URL  = "https://wabuhpfowgggzciqwaft.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhYnVocGZvd2dnZ3pjaXF3YWZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NTY4MjUsImV4cCI6MjA5MjEzMjgyNX0.oqUqH6JcTmskmESupaHsBCPWSzw4xm2GNPqrRz5bEIo";
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+window._sb = _supabase;
+window._sbReady = true;
+window.dispatchEvent(new Event("supabase-ready"));
 </script>
 <style>
 body.ds-loading { visibility: hidden; }
@@ -9424,84 +9411,77 @@ const VENTAS_STORAGE_KEY = "drsmoke_ventas";
 const VENTAS_STORAGE_BACKUP_KEY = "drsmoke_ventas_backup";
 let ventasState = [];
 
-// ── FIREBASE SYNC ─────────────────────────────────────────────────────────
-let _fbUnsubscribe = null;
-let _fbSyncEnabled = false;
+// ── SUPABASE SYNC ──────────────────────────────────────────────────────────
+let _sbChannel = null;
+let _sbSyncEnabled = false;
 
-function _fbGetVentasCol(){
-  return window._fb ? window._fb.collection(window._fb.db, "ventas") : null;
+async function sbGuardarVenta(venta){
+  if(!window._sb) return;
+  const { error } = await window._sb.from("ventas").upsert(venta, { onConflict: "folio" });
+  if(error) throw error;
 }
 
-async function fbGuardarVenta(venta){
-  if(!window._fb) return;
-  const { db, doc, setDoc } = window._fb;
-  const ref = doc(db, "ventas", venta.folio);
-  await setDoc(ref, venta);
+async function sbEliminarVenta(folio){
+  if(!window._sb) return;
+  const { error } = await window._sb.from("ventas").delete().eq("folio", folio);
+  if(error) throw error;
 }
 
-async function fbEliminarVenta(folio){
-  if(!window._fb) return;
-  const { db, doc, deleteDoc } = window._fb;
-  await deleteDoc(doc(db, "ventas", folio));
-}
-
-async function fbGuardarTodas(ventas){
-  if(!window._fb || !ventas.length) return;
-  const { db, writeBatch, doc } = window._fb;
-  // Firestore batch max 500 docs
+async function sbGuardarTodas(ventas){
+  if(!window._sb || !ventas.length) return;
+  // Supabase upsert maneja lotes sin límite de 500
   const chunks = [];
-  for(let i = 0; i < ventas.length; i += 499) chunks.push(ventas.slice(i, i+499));
+  for(let i = 0; i < ventas.length; i += 500) chunks.push(ventas.slice(i, i+500));
   for(const chunk of chunks){
-    const batch = writeBatch(db);
-    chunk.forEach(v => batch.set(doc(db, "ventas", v.folio), v));
-    await batch.commit();
+    const { error } = await window._sb.from("ventas").upsert(chunk, { onConflict: "folio" });
+    if(error) throw error;
   }
 }
 
-function fbIniciarSync(){
-  if(_fbUnsubscribe) _fbUnsubscribe();
-  const col = _fbGetVentasCol();
-  if(!col) return;
-  _fbUnsubscribe = window._fb.onSnapshot(col, snap => {
-    if(_ventasHydrating) return;
-    const remoto = [];
-    snap.forEach(d => remoto.push(normalizarVenta(d.data())));
-    remoto.sort((a,b) => a.folio.localeCompare(b.folio));
-    const localStr = JSON.stringify(ventasState.map(v=>v.folio).sort());
-    const remotoStr = JSON.stringify(remoto.map(v=>v.folio).sort());
-    if(localStr === remotoStr) return; // sin cambios reales
-    // Actualizar estado y UI sin perder posición
-    ventasState = remoto;
-    localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(ventasState));
-    localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(ventasState));
-    if(remoto.length > 0){
-      folioCount = Math.max(...remoto.map(v => parseInt(v.folio.replace("DS-",""))||0)) + 1;
-      localStorage.setItem("drsmoke_folioCount", folioCount);
-    }
-    // Re-renderizar tabla silenciosamente
-    const tbody = document.getElementById("cuerpo");
-    if(tbody){
-      _ventasHydrating = true;
-      tbody.innerHTML = "";
-      ventasState.forEach(v => {
-        try{ const tr = crearFila(v); tbody.appendChild(tr); recalcFila(tr); } catch(e){}
-      });
-      _ventasHydrating = false;
-      try{ filtrar(); } catch(e){}
-      try{ vvFiltrar(); } catch(e){}
-      actualizarTotales();
-    }
-    // indicador sincronizado
-    const ind = document.getElementById("autoguardado");
-    if(ind){ _setSaveText(ind, "Sincronizado"); }
-  }, err => {
-    console.warn("[firebase] onSnapshot error:", err);
-  });
-  _fbSyncEnabled = true;
+function sbIniciarSync(){
+  if(_sbChannel) _sbChannel.unsubscribe();
+  if(!window._sb) return;
+
+  _sbChannel = window._sb
+    .channel("ventas-changes")
+    .on("postgres_changes", { event: "*", schema: "public", table: "ventas" }, async () => {
+      if(_ventasHydrating) return;
+      // Re-fetch completo al detectar cambio
+      const { data, error } = await window._sb.from("ventas").select("*");
+      if(error || !data) return;
+      const remoto = data.map(normalizarVenta).sort((a,b) => a.folio.localeCompare(b.folio));
+      const localStr = JSON.stringify(ventasState.map(v=>v.folio).sort());
+      const remotoStr = JSON.stringify(remoto.map(v=>v.folio).sort());
+      if(localStr === remotoStr) return;
+      ventasState = remoto;
+      localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(ventasState));
+      localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(ventasState));
+      if(remoto.length > 0){
+        folioCount = Math.max(...remoto.map(v => parseInt(v.folio.replace("DS-",""))||0)) + 1;
+        localStorage.setItem("drsmoke_folioCount", folioCount);
+      }
+      const tbody = document.getElementById("cuerpo");
+      if(tbody){
+        _ventasHydrating = true;
+        tbody.innerHTML = "";
+        ventasState.forEach(v => {
+          try{ const tr = crearFila(v); tbody.appendChild(tr); recalcFila(tr); } catch(e){}
+        });
+        _ventasHydrating = false;
+        try{ filtrar(); } catch(e){}
+        try{ vvFiltrar(); } catch(e){}
+        actualizarTotales();
+      }
+      const ind = document.getElementById("autoguardado");
+      if(ind){ _setSaveText(ind, "Sincronizado"); }
+    })
+    .subscribe();
+
+  _sbSyncEnabled = true;
 }
 
-window.addEventListener("firebase-ready", () => {
-  fbIniciarSync();
+window.addEventListener("supabase-ready", () => {
+  sbIniciarSync();
 });
 
 function normalizarVenta(v){
@@ -9568,9 +9548,9 @@ function guardarVentasStorage(datos){
   } catch(e){
     console.error("[ventas] No se pudo guardar en localStorage:", e);
   }
-  // Sincronizar con Firebase si está disponible
-  if(window._fbReady){
-    fbGuardarTodas(ventasState).catch(e => console.warn("[firebase] guardar falló:", e));
+  // Sincronizar con Supabase si está disponible
+  if(window._sbReady){
+    sbGuardarTodas(ventasState).catch(e => console.warn("[supabase] guardar falló:", e));
   }
   return true;
 }
@@ -9643,14 +9623,11 @@ function borrarDatosGuardados(){
     localStorage.removeItem(VENTAS_STORAGE_KEY);
     localStorage.removeItem(VENTAS_STORAGE_BACKUP_KEY);
     localStorage.removeItem("drsmoke_folioCount");
-    // Borrar también de Firestore
-    if(window._fbReady){
-      const { db, collection, getDocs, writeBatch, doc } = window._fb;
-      getDocs(collection(db, "ventas")).then(snap => {
-        const batch = writeBatch(db);
-        snap.forEach(d => batch.delete(doc(db, "ventas", d.id)));
-        return batch.commit();
-      }).then(() => location.reload()).catch(() => location.reload());
+    // Borrar también de Supabase
+    if(window._sbReady){
+      window._sb.from("ventas").delete().neq("folio", "")
+        .then(() => location.reload())
+        .catch(() => location.reload());
     } else {
       location.reload();
     }
@@ -10348,26 +10325,24 @@ function _renderizarDatos(datosCargar, guardado){
 
 function renderizar(){
   const guardadoLocal = cargarDatosGuardados();
-  // Carga local primero (inmediata), luego Firebase sobreescribe via onSnapshot
+  // Carga local primero (inmediata), luego Supabase sobreescribe via realtime
   const datosInicial = clonarVentas(guardadoLocal ?? ventasDemo);
   _renderizarDatos(datosInicial, guardadoLocal);
 
-  // Si Firebase ya está listo, cargar desde Firestore
-  if(window._fbReady){
-    const { db, collection, getDocs } = window._fb;
-    getDocs(collection(db, "ventas")).then(snap => {
-      const remoto = [];
-      snap.forEach(d => remoto.push(normalizarVenta(d.data())));
+  // Si Supabase ya está listo, cargar desde la base de datos
+  if(window._sbReady){
+    window._sb.from("ventas").select("*").then(({ data, error }) => {
+      if(error || !data || !data.length) return;
+      const remoto = data.map(normalizarVenta);
       remoto.sort((a,b) => a.folio.localeCompare(b.folio));
+      localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(remoto));
+      localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(remoto));
       if(remoto.length > 0){
-        localStorage.setItem(VENTAS_STORAGE_KEY, JSON.stringify(remoto));
-        localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(remoto));
-        const maxFolio = Math.max(...remoto.map(v => parseInt(v.folio.replace("DS-",""))||0));
-        folioCount = maxFolio + 1;
+        folioCount = Math.max(...remoto.map(v => parseInt(v.folio.replace("DS-",""))||0)) + 1;
         localStorage.setItem("drsmoke_folioCount", folioCount);
         _renderizarDatos(remoto, remoto);
       }
-    }).catch(e => console.warn("[firebase] getDocs falló, usando local:", e));
+    }).catch(e => console.warn("[supabase] getDocs falló, usando local:", e));
   }
 }
 
@@ -10378,8 +10353,8 @@ function eliminarFila(btn){
   if(folio){
     ventasState = ventasState.filter(v => v.folio !== folio);
     guardarVentasStorage(ventasState);
-    // Borrar de Firestore también
-    if(window._fbReady) fbEliminarVenta(folio).catch(e => console.warn("[firebase] delete falló:", e));
+    // Borrar de Supabase también
+    if(window._sbReady) sbEliminarVenta(folio).catch(e => console.warn("[supabase] delete falló:", e));
   } else {
     autoguardar();
   }
@@ -10671,9 +10646,9 @@ function guardarModal(){
     localStorage.setItem(VENTAS_STORAGE_BACKUP_KEY, JSON.stringify(ventasState));
     localStorage.setItem("drsmoke_folioCount", folioCount);
   } catch(e){}
-  // Subir a Firebase individualmente (más eficiente que subir todo)
-  if(window._fbReady){
-    ventasNormalizadas.forEach(v => fbGuardarVenta(v).catch(e => console.warn("[firebase] guardar venta:", e)));
+  // Subir a Supabase individualmente (más eficiente que subir todo)
+  if(window._sbReady){
+    ventasNormalizadas.forEach(v => sbGuardarVenta(v).catch(e => console.warn("[supabase] guardar venta:", e)));
   }
   filtrar();
   vvFiltrar();
